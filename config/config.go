@@ -16,6 +16,7 @@ type DatabaseConfig struct {
 	Password     string `yaml:"password"`
 	DatabaseName string `yaml:"database_name"`
 	Host         string `yaml:"host"`
+	Port         string `json:"port"`
 }
 
 // GetConfig looks for config.yaml in the current directory and reads

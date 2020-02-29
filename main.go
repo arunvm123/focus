@@ -31,7 +31,8 @@ func main() {
 		log.Fatalf("Failed to read config\n%v", err)
 	}
 
-	server.db, err = gorm.Open("mysql", config.Database.User+":"+config.Database.Password+"@/"+config.Database.DatabaseName+"?parseTime=true")
+	// <username>:<pw>@tcp(<HOST>:<port>)/<dbname>")
+	server.db, err = gorm.Open("mysql", config.Database.User+":"+config.Database.Password+"@tcp("+config.Database.Host+":"+config.Database.Port+")/"+config.Database.DatabaseName+"?parseTime=true")
 	if err != nil {
 		panic(err)
 	}
