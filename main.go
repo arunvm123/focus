@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/rs/cors"
+
 	"github.com/arunvm/travail-backend/config"
 
 	"github.com/arunvm/travail-backend/models"
@@ -42,5 +44,7 @@ func main() {
 
 	server.routes = initialiseRoutes(server)
 
-	http.ListenAndServe(":5000", server.routes)
+	routes := cors.Default().Handler(server.routes)
+
+	http.ListenAndServe(":5000", routes)
 }
