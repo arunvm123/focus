@@ -3,4 +3,5 @@ database:
   user: "<USER>"
   password: "<PASSWORD"
   database_name: "<DATABASE_NAME>"
+  port: "3306"
 jwt_secret: "<JWT_SECRET>"
