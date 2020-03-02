@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/rs/cors"
+
 	"github.com/arunvm/travail-backend/config"
 
 	"github.com/arunvm/travail-backend/models"
@@ -31,7 +33,8 @@ func main() {
 		log.Fatalf("Failed to read config\n%v", err)
 	}
 
-	server.db, err = gorm.Open("mysql", config.Database.User+":"+config.Database.Password+"@/"+config.Database.DatabaseName+"?parseTime=true")
+	// <username>:<pw>@tcp(<HOST>:<port>)/<dbname>")
+	server.db, err = gorm.Open("mysql", config.Database.User+":"+config.Database.Password+"@tcp("+config.Database.Host+":"+config.Database.Port+")/"+config.Database.DatabaseName+"?parseTime=true")
 	if err != nil {
 		panic(err)
 	}
@@ -41,5 +44,7 @@ func main() {
 
 	server.routes = initialiseRoutes(server)
 
-	http.ListenAndServe(":5000", server.routes)
+	routes := cors.Default().Handler(server.routes)
+
+	http.ListenAndServe(":5000", routes)
 }
