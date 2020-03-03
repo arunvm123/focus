@@ -5,3 +5,13 @@
 ```  
   go run .
 ```
+
+## Docker
+
+```
+  docker build -t travail-backend .
+```
+
+```
+  docker run -it -p 5000:5000 travail-backend
+```
