@@ -87,7 +87,7 @@ func (server *server) login(c *gin.Context) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginData.Password))
 	if err != nil {
-		log.Printf("Passwrods do not match\n%v", err)
+		log.Printf("Passwords do not match\n%v", err)
 		c.JSON(http.StatusUnauthorized, "Wrong password")
 		return
 	}
