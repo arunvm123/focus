@@ -40,7 +40,7 @@ func (server *server) signup(c *gin.Context) {
 	}
 
 	if count > 0 {
-		c.JSON(http.StatusOK, "Email already exists")
+		c.JSON(http.StatusConflict, "Email already exists")
 		return
 	}
 
