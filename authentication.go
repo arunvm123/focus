@@ -111,7 +111,7 @@ func (server *server) login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("Token", signedToken, 0, "", "", http.SameSiteStrictMode, false, false)
+	c.SetCookie("Token", signedToken, 0, "", "", false, false)
 
 	c.JSON(http.StatusOK, struct {
 		Token string `json:"token"`
