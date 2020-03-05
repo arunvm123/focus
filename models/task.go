@@ -126,6 +126,19 @@ func (user *User) CreateTask(db *gorm.DB, task *Task) error {
 	return nil
 }
 
+func (user *User) GetTasks(db *gorm.DB) (*[]Task, error) {
+	var tasks []Task
+
+	err := db.Table("lists").Joins("JOIN tasks on tasks.list_id = lists.id").
+		Where("lists.archived = false AND tasks.archived = false AND lists.user_id = ?", user.ID).
+		Select("tasks.*").Find(&tasks).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &tasks, nil
+}
+
 func createTasks(db *gorm.DB, tasks *[]Task) error {
 	if len(*tasks) == 0 {
 		return nil
