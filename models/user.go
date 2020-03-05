@@ -28,3 +28,15 @@ func GetUserFromEmail(db *gorm.DB, email string) (*User, error) {
 
 	return &user, nil
 }
+
+// GetUserFromID returns user details from the given user id
+func GetUserFromID(db *gorm.DB, userID int) (*User, error) {
+	var user User
+
+	err := db.Find(&user, "id = ?", userID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
