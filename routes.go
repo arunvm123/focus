@@ -16,6 +16,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 	private.POST("/create/tasks", server.createTasks)
 	private.POST("/create/task", server.createTask)
 	private.POST("/get/tasks", server.getTasks)
+	private.POST("/update/task", server.updateTask)
 
 	return r
 }

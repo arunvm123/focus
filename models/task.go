@@ -34,6 +34,14 @@ type CreateTaskArgs struct {
 	Order int    `json:"order"`
 }
 
+type UpdateTaskArgs struct {
+	ID       int     `json:"id"`
+	Info     *string `json:"info"`
+	Order    *int    `json:"order"`
+	Complete *bool   `json:"complete"`
+	Archived *bool   `json:"archived"`
+}
+
 func (user *User) CreateTasks(db *gorm.DB, args *[]CreateTaskArgs) error {
 	list, err := getListOfUser(db, user.ID)
 	if err != nil {
@@ -139,6 +147,38 @@ func (user *User) GetTasks(db *gorm.DB) (*[]Task, error) {
 	return &tasks, nil
 }
 
+func (user *User) UpdateTask(db *gorm.DB, args UpdateTaskArgs) error {
+	task, err := getTaskOfUser(db, user.ID, args.ID)
+	if err != nil {
+		log.Printf("Error fetching task\n%v", err)
+		return err
+	}
+
+	if args.Archived != nil {
+		task.Archived = *args.Archived
+	}
+	if args.Complete != nil {
+		task.Complete = *args.Complete
+	}
+	if args.Info != nil {
+		task.Info = *args.Info
+	}
+	if args.Order != nil {
+		task.Order = *args.Order
+	}
+
+	updatedAt := time.Now().Unix()
+	task.UpdatedAt = &updatedAt
+
+	err = task.Save(db)
+	if err != nil {
+		log.Printf("Error updating task\n%v", err)
+		return err
+	}
+
+	return nil
+}
+
 func createTasks(db *gorm.DB, tasks *[]Task) error {
 	if len(*tasks) == 0 {
 		return nil
@@ -165,4 +205,17 @@ func createTasks(db *gorm.DB, tasks *[]Task) error {
 	}
 
 	return nil
+}
+
+func getTaskOfUser(db *gorm.DB, userID int, taskID int) (*Task, error) {
+	var task Task
+
+	err := db.Table("lists").Joins("JOIN tasks on tasks.list_id = lists.id").
+		Where("lists.archived = false AND tasks.archived = false AND lists.user_id = ? AND tasks.id = ?", userID, taskID).
+		Select("tasks.*").Find(&task).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &task, nil
 }
