@@ -44,10 +44,11 @@ func main() {
 
 	server.routes = initialiseRoutes(server)
 
-	c := cors.New(cors.Options{
-		AllowedHeaders: []string{"Authorization"},
-	})
-	routes := c.Handler(server.routes)
+	// c := cors.New(cors.Options{
+	// 	AllowedHeaders: []string{"Authorization"},
+	// 	AllowedOrigins: []string{"*"},
+	// })
+	routes := cors.Default().Handler(server.routes)
 
 	http.ListenAndServe(":5000", routes)
 }
