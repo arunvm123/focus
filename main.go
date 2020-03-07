@@ -44,11 +44,7 @@ func main() {
 
 	server.routes = initialiseRoutes(server)
 
-	// c := cors.New(cors.Options{
-	// 	AllowedHeaders: []string{"Authorization"},
-	// 	AllowedOrigins: []string{"*"},
-	// })
-	routes := cors.Default().Handler(server.routes)
+	routes := cors.AllowAll().Handler(server.routes)
 
-	http.ListenAndServe(":5000", routes)
+	http.ListenAndServeTLS(":5000", "./certs/fullchain.pem", "./certs/privkey.pem", routes)
 }
