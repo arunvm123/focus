@@ -115,8 +115,14 @@ func (server *server) login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, struct {
 		Token string `json:"token"`
+		Name  string `json:"name"`
+		ID    int    `json:"id"`
+		Email string `json:"email"`
 	}{
 		Token: signedToken,
+		Email: user.Email,
+		ID:    user.ID,
+		Name:  user.Name,
 	})
 	return
 }
