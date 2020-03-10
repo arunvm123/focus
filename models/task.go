@@ -14,6 +14,7 @@ type Task struct {
 	Info      string `json:"info"`
 	CreatedAt int64  `json:"createdAt"`
 	UpdatedAt *int64 `json:"updatedAt"`
+	ExpiresAt *int64 `json:"expiresAt"`
 	Complete  bool   `json:"complete"`
 	Order     int    `json:"order"`
 	Archived  bool   `json:"archived"`
@@ -30,16 +31,18 @@ func (t *Task) Save(db *gorm.DB) error {
 }
 
 type CreateTaskArgs struct {
-	Info  string `json:"info"`
-	Order int    `json:"order"`
+	Info      string `json:"info"`
+	Order     int    `json:"order"`
+	ExpiresAt *int64 `json:"expiresAt"`
 }
 
 type UpdateTaskArgs struct {
-	ID       int     `json:"id"`
-	Info     *string `json:"info"`
-	Order    *int    `json:"order"`
-	Complete *bool   `json:"complete"`
-	Archived *bool   `json:"archived"`
+	ID        int     `json:"id"`
+	Info      *string `json:"info"`
+	Order     *int    `json:"order"`
+	Complete  *bool   `json:"complete"`
+	Archived  *bool   `json:"archived"`
+	ExpiresAt *int64  `json:"expiresAt"`
 }
 
 func (user *User) CreateTasks(db *gorm.DB, args *[]CreateTaskArgs) error {
@@ -108,7 +111,8 @@ func (user *User) CreateTask(db *gorm.DB, task *Task) error {
 			UserID:    user.ID,
 			Archived:  false,
 			CreatedAt: time.Now().Unix(),
-			Heading:   "Default List",
+
+			Heading: "Default List",
 		}
 
 		err = list.Create(tx)
@@ -165,6 +169,9 @@ func (user *User) UpdateTask(db *gorm.DB, args UpdateTaskArgs) error {
 	}
 	if args.Order != nil {
 		task.Order = *args.Order
+	}
+	if args.ExpiresAt != nil {
+		task.ExpiresAt = args.ExpiresAt
 	}
 
 	updatedAt := time.Now().Unix()
