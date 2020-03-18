@@ -59,3 +59,16 @@ func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) error {
 
 	return nil
 }
+
+// GetLists returns all lists of the user
+func (user *User) GetLists(db *gorm.DB) (*[]List, error) {
+	var lists []List
+
+	err := db.Find(&lists, "archived = false AND user_id = ?", user.ID).Error
+	if err != nil {
+		log.Printf("Error when fethcing lists\n%v", err)
+		return nil, err
+	}
+
+	return &lists, nil
+}
