@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"log"
 	"time"
 
@@ -34,6 +35,10 @@ type CreateTaskArgs struct {
 	Info      string `json:"info"`
 	Order     int    `json:"order"`
 	ExpiresAt *int64 `json:"expiresAt"`
+}
+
+type GetTasksArgs struct {
+	ListID int `json:"listID"`
 }
 
 type UpdateTaskArgs struct {
@@ -97,7 +102,7 @@ func (user *User) CreateTasks(db *gorm.DB, args *[]CreateTaskArgs) error {
 }
 
 func (user *User) CreateTask(db *gorm.DB, task *Task) error {
-	list, err := getListOfUser(db, user.ID)
+	list, err := getList(db, task.ListID)
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
 			log.Printf("Error when fetching users list\n%v", err)
@@ -105,23 +110,11 @@ func (user *User) CreateTask(db *gorm.DB, task *Task) error {
 		}
 	}
 
-	tx := db.Begin()
-	if list == nil {
-		list = &List{
-			UserID:    user.ID,
-			Archived:  false,
-			CreatedAt: time.Now().Unix(),
-
-			Heading: "Default List",
-		}
-
-		err = list.Create(tx)
-		if err != nil {
-			tx.Rollback()
-			log.Printf("Error when creating list\n%v", err)
-			return err
-		}
+	if list.UserID != user.ID {
+		return errors.New("Not user's list")
 	}
+
+	tx := db.Begin()
 
 	task.ListID = list.ID
 	task.Archived = false
@@ -138,11 +131,11 @@ func (user *User) CreateTask(db *gorm.DB, task *Task) error {
 	return nil
 }
 
-func (user *User) GetTasks(db *gorm.DB) (*[]Task, error) {
+func (user *User) GetTasks(db *gorm.DB, args *GetTasksArgs) (*[]Task, error) {
 	var tasks []Task
 
 	err := db.Table("lists").Joins("JOIN tasks on tasks.list_id = lists.id").
-		Where("lists.archived = false AND tasks.archived = false AND lists.user_id = ?", user.ID).
+		Where("lists.archived = false AND tasks.archived = false AND lists.user_id = ? AND lists.id = ?", user.ID, args.ListID).
 		Select("tasks.*").Find(&tasks).Error
 	if err != nil {
 		return nil, err
