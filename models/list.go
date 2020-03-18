@@ -2,6 +2,7 @@ package models
 
 import (
 	"log"
+	"time"
 
 	"github.com/jinzhu/gorm"
 )
@@ -25,6 +26,11 @@ func (l *List) Save(db *gorm.DB) error {
 	return db.Save(&l).Error
 }
 
+// CreateListArgs defines the args for create list api
+type CreateListArgs struct {
+	Heading string `json:"heading"`
+}
+
 func getListOfUser(db *gorm.DB, userID int) (*List, error) {
 	var list List
 
@@ -35,4 +41,21 @@ func getListOfUser(db *gorm.DB, userID int) (*List, error) {
 	}
 
 	return &list, nil
+}
+
+func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) error {
+	list := List{
+		UserID:    user.ID,
+		Archived:  false,
+		CreatedAt: time.Now().Unix(),
+		Heading:   args.Heading,
+	}
+
+	err := list.Create(db)
+	if err != nil {
+		log.Printf("Error when creating list\n%v", err)
+		return err
+	}
+
+	return nil
 }

@@ -13,6 +13,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 
 	private := r.Group("/")
 	private.Use(server.tokenAuthorisationMiddleware())
+	private.POST("/create/list", server.createList)
 	private.POST("/create/tasks", server.createTasks)
 	private.POST("/create/task", server.createTask)
 	private.POST("/get/tasks", server.getTasks)
