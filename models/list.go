@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"log"
 	"time"
 
@@ -29,6 +30,13 @@ func (l *List) Save(db *gorm.DB) error {
 // CreateListArgs defines the args for create list api
 type CreateListArgs struct {
 	Heading string `json:"heading"`
+}
+
+// UpdateListArgs defines the args for update list api
+type UpdateListArgs struct {
+	ID       int     `json:"id"`
+	Heading  *string `json:"heading,omitempty"`
+	Archived *bool   `json:"archived,omitempty"`
 }
 
 func getListOfUser(db *gorm.DB, userID int) (*List, error) {
@@ -71,4 +79,44 @@ func (user *User) GetLists(db *gorm.DB) (*[]List, error) {
 	}
 
 	return &lists, nil
+}
+
+// UpdateList updates list info
+func (user *User) UpdateList(db *gorm.DB, args *UpdateListArgs) error {
+	list, err := getList(db, args.ID)
+	if err != nil {
+		log.Printf("Error while getting list\n%v", err)
+		return err
+	}
+
+	if list.UserID != user.ID {
+		return errors.New("Not user's list")
+	}
+
+	if args.Heading != nil {
+		list.Heading = *args.Heading
+	}
+	if args.Archived != nil {
+		list.Archived = *args.Archived
+	}
+
+	err = list.Save(db)
+	if err != nil {
+		log.Printf("Error while updating list\n%v", err)
+		return err
+	}
+
+	return nil
+}
+
+func getList(db *gorm.DB, listID int) (*List, error) {
+	var list List
+
+	err := db.Find(&list, "archived = false AND id = ?", listID).Error
+	if err != nil {
+		log.Printf("Error while fetching list\n%v", err)
+		return nil, err
+	}
+
+	return &list, nil
 }
