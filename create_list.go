@@ -24,12 +24,16 @@ func (server *server) createList(c *gin.Context) {
 		return
 	}
 
-	err = user.CreateList(server.db, &args)
+	list, err := user.CreateList(server.db, &args)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusOK, struct {
+		ID int `json:"id"`
+	}{
+		ID: list.ID,
+	})
 	return
 }

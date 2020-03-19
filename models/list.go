@@ -51,7 +51,7 @@ func getListOfUser(db *gorm.DB, userID int) (*List, error) {
 	return &list, nil
 }
 
-func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) error {
+func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) (*List, error) {
 	list := List{
 		UserID:    user.ID,
 		Archived:  false,
@@ -62,10 +62,10 @@ func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) error {
 	err := list.Create(db)
 	if err != nil {
 		log.Printf("Error when creating list\n%v", err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &list, nil
 }
 
 // GetLists returns all lists of the user
