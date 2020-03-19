@@ -13,11 +13,13 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
+	"github.com/sendgrid/sendgrid-go"
 )
 
 type server struct {
 	db     *gorm.DB
 	routes *gin.Engine
+	email  *sendgrid.Client
 }
 
 func newServer() *server {
@@ -41,6 +43,9 @@ func main() {
 
 	server.db.LogMode(true)
 	models.MigrateDB(server.db)
+
+	// email client
+	server.email = sendgrid.NewSendClient(config.SendgridKey)
 
 	server.routes = initialiseRoutes(server)
 

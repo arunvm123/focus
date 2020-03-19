@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/arunvm/travail-backend/config"
+	"github.com/arunvm/travail-backend/emails"
 	"github.com/dgrijalva/jwt-go"
 
 	"github.com/arunvm/travail-backend/models"
@@ -52,13 +53,34 @@ func (server *server) signup(c *gin.Context) {
 	}
 
 	user.Password = string(passwordHash)
+	user.Verified = false
 
-	err = user.Create(server.db)
+	tx := server.db.Begin()
+	err = user.Create(tx)
 	if err != nil {
+		tx.Rollback()
 		log.Printf("Error when inserting data to database\n%v", err)
 		c.JSON(http.StatusInternalServerError, "Error inserting data into DB")
 		return
 	}
+
+	token, err := models.CreateEmailValidationToken(tx, &user)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error when creating email validate token\n%v", err)
+		c.JSON(http.StatusInternalServerError, "Error creating email validate token")
+		return
+	}
+
+	err = emails.SendValidationEmail(server.email, &user, token)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error sending validation email\n%v", err)
+		c.JSON(http.StatusInternalServerError, "Error sending email")
+		return
+	}
+
+	tx.Commit()
 
 	c.Status(http.StatusOK)
 	return
@@ -82,6 +104,11 @@ func (server *server) login(c *gin.Context) {
 		}
 		log.Printf("Error when looking up user with email\n%v", err)
 		c.JSON(http.StatusInternalServerError, "Server error")
+		return
+	}
+
+	if !user.Verified {
+		c.JSON(http.StatusUnauthorized, "Email not verified")
 		return
 	}
 

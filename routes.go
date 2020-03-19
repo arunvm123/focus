@@ -10,6 +10,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 	public := r.Group("/")
 	public.POST("/signup", server.signup)
 	public.POST("/login", server.login)
+	public.POST("/verify/email", server.verifyEmail)
 
 	private := r.Group("/")
 	private.Use(server.tokenAuthorisationMiddleware())

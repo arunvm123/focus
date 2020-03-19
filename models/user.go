@@ -13,6 +13,7 @@ type User struct {
 	Email    string `json:"email" gorm:"unique;not null"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
+	Verified bool   `json:"verified"`
 }
 
 // Create is a helper function to create a new user

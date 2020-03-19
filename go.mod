@@ -10,5 +10,7 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.2.1
 	github.com/jinzhu/gorm v1.9.12
 	github.com/rs/cors v1.7.0
+	github.com/sendgrid/rest v2.4.1+incompatible // indirect
+	github.com/sendgrid/sendgrid-go v3.5.0+incompatible
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
 )

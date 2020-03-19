@@ -6,8 +6,10 @@ import (
 
 // Config lists out configuration for all dependencies
 type Config struct {
-	Database  DatabaseConfig `yaml:"database"`
-	JWTSecret string         `yaml:"jwt_secret"`
+	DomainURL   string         `yaml:"domain_url"`
+	Database    DatabaseConfig `yaml:"database"`
+	JWTSecret   string         `yaml:"jwt_secret"`
+	SendgridKey string         `yaml:"sendgrid_key"`
 }
 
 // DatabaseConfig defines structure for database configuration

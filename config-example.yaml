@@ -1,3 +1,4 @@
+domain_url: "<DOMAIN_URL>"
 database:
   host: "<HOST>"
   user: "<USER>"
@@ -5,3 +6,4 @@ database:
   database_name: "<DATABASE_NAME>"
   port: "<PORT>"
 jwt_secret: "<JWT_SECRET>"
+sendgrid_key: "<SENDGRID_KEY>"
