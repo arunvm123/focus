@@ -9,15 +9,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (server *server) getTasks(c *gin.Context) {
+func (server *server) updateList(c *gin.Context) {
 	user, err := getUserFromContext(c)
 	if err != nil {
-		log.Println("Unable to fetch user")
-		c.JSON(http.StatusInternalServerError, "Error fetching user")
+		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
-	var args models.GetTasksArgs
+	var args models.UpdateListArgs
 	err = json.NewDecoder(c.Request.Body).Decode(&args)
 	if err != nil {
 		log.Printf("Error when decoding request body\n%v", err)
@@ -25,13 +24,12 @@ func (server *server) getTasks(c *gin.Context) {
 		return
 	}
 
-	tasks, err := user.GetTasks(server.db, &args)
+	err = user.UpdateList(server.db, &args)
 	if err != nil {
-		log.Printf("Error when fetching tasks\n%v", err)
-		c.JSON(http.StatusInternalServerError, "Error fetching tasks")
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, tasks)
+	c.JSON(http.StatusOK, nil)
 	return
 }

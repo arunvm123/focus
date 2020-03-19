@@ -19,8 +19,8 @@ func (server *server) createTask(c *gin.Context) {
 		return
 	}
 
-	user, ok := c.Keys["user"].(*models.User)
-	if !ok {
+	user, err := getUserFromContext(c)
+	if err != nil {
 		log.Println("Unable to fetch user")
 		c.JSON(http.StatusInternalServerError, "Error fetching user")
 		return
