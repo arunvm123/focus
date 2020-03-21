@@ -27,6 +27,12 @@ func (l *List) Save(db *gorm.DB) error {
 	return db.Save(&l).Error
 }
 
+type ListInfo struct {
+	List
+	PendingTasks   int `json:"pendingTasks"`
+	CompletedTasks int `json:"completedTasks"`
+}
+
 // CreateListArgs defines the args for create list api
 type CreateListArgs struct {
 	Heading string `json:"heading"`
@@ -69,10 +75,16 @@ func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) (*List, error) {
 }
 
 // GetLists returns all lists of the user
-func (user *User) GetLists(db *gorm.DB) (*[]List, error) {
-	var lists []List
+func (user *User) GetLists(db *gorm.DB) (*[]ListInfo, error) {
+	var lists []ListInfo
 
-	err := db.Find(&lists, "archived = false AND user_id = ?", user.ID).Error
+	err := db.Table("lists").Joins("JOIN tasks on lists.id = tasks.list_id").
+		Select("lists.*,"+
+			"sum(case when complete = true then 1 else 0 end) as completed_tasks,"+
+			"sum(case when complete = false then 1 else 0 end) as pending_tasks").
+		Where("lists.archived = false AND tasks.archived = false AND lists.user_id = ?", user.ID).
+		Group("lists.id").
+		Find(&lists).Error
 	if err != nil {
 		log.Printf("Error when fethcing lists\n%v", err)
 		return nil, err
