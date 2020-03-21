@@ -138,7 +138,7 @@ func (server *server) login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("Token", signedToken, 0, "", "", false, false)
+	c.SetCookie("Authorization", signedToken, 0, "", "travail.in", false, false)
 
 	c.JSON(http.StatusOK, struct {
 		Token string `json:"token"`
