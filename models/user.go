@@ -33,6 +33,17 @@ type UserProfile struct {
 	Name  string `json:"name"`
 }
 
+type SignUpArgs struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginArgs struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type UpdateProfileArgs struct {
 	// Email    *string `json:"email,omitempty"`
 	Name     *string `json:"name,omitempty"`
@@ -89,6 +100,47 @@ func GetUserFromID(db *gorm.DB, userID int) (*User, error) {
 
 	err := db.Find(&user, "id = ?", userID).Error
 	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func CheckIfUserExists(db *gorm.DB, email string) bool {
+	var count int
+	err := db.Table("users").Where("email = ?", email).Count(&count).Error
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			log.Printf("Error when checking if user exists\n%v", err)
+			return true
+		}
+	}
+
+	if count > 0 {
+		return true
+	}
+
+	return false
+}
+
+func UserSignup(db *gorm.DB, args *SignUpArgs) (*User, error) {
+	var user User
+
+	user.Email = args.Email
+	user.Name = args.Name
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("Error when hashing password\n%v", err)
+		return nil, err
+	}
+
+	user.Password = string(passwordHash)
+	user.Verified = false
+
+	err = user.Create(db)
+	if err != nil {
+		log.Printf("Error when inserting data to database\n%v", err)
 		return nil, err
 	}
 

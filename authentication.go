@@ -20,83 +20,54 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-type loginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 func (server *server) signup(c *gin.Context) {
-	var user models.User
-	err := json.NewDecoder(c.Request.Body).Decode(&user)
+	var args models.SignUpArgs
+	err := json.NewDecoder(c.Request.Body).Decode(&args)
 	if err != nil {
 		log.Printf("Error when decoding request body\n%v", err)
-		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
+		c.JSON(http.StatusBadRequest, "Request body not properly formatted")
 		return
 	}
 
-	var count int
-	err = server.db.Table("users").Where("email = ?", user.Email).Count(&count).Error
-	if err != nil {
-		if err != gorm.ErrRecordNotFound {
-			log.Printf("Error when checking if user exists\n%v", err)
-			c.JSON(http.StatusInternalServerError, "Internal error")
-			return
-		}
-	}
-
-	if count > 0 {
+	if models.CheckIfUserExists(server.db, args.Email) == true {
 		c.JSON(http.StatusConflict, "Email already exists")
 		return
 	}
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		log.Printf("Error when hashing password\n%v", err)
-		c.JSON(http.StatusInternalServerError, "Error hashing password")
-		return
-	}
-
-	user.Password = string(passwordHash)
-	user.Verified = false
-
 	tx := server.db.Begin()
-	err = user.Create(tx)
+	user, err := models.UserSignup(tx, &args)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error when inserting data to database\n%v", err)
-		c.JSON(http.StatusInternalServerError, "Error inserting data into DB")
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	token, err := models.CreateEmailValidationToken(tx, &user)
+	token, err := models.CreateEmailValidationToken(tx, user)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error when creating email validate token\n%v", err)
-		c.JSON(http.StatusInternalServerError, "Error creating email validate token")
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	err = emails.SendValidationEmail(server.email, &user, token)
+	err = emails.SendValidationEmail(server.email, user, token)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error sending validation email\n%v", err)
-		c.JSON(http.StatusInternalServerError, "Error sending email")
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	tx.Commit()
-
 	c.Status(http.StatusOK)
 	return
 }
 
 func (server *server) login(c *gin.Context) {
-	var loginData loginRequest
+	var loginData models.LoginArgs
 
 	err := json.NewDecoder(c.Request.Body).Decode(&loginData)
 	if err != nil {
 		log.Printf("Error when decoding request body\n%v", err)
-		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
+		c.JSON(http.StatusBadRequest, "Request body not properly formatted")
 		return
 	}
 
