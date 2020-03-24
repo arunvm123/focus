@@ -2,16 +2,20 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func (server *server) createList(c *gin.Context) {
 	user, err := getUserFromContext(c)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "createList",
+			"subFunc": "getUserFromContext",
+		}).Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -19,13 +23,23 @@ func (server *server) createList(c *gin.Context) {
 	var args models.CreateListArgs
 	err = json.NewDecoder(c.Request.Body).Decode(&args)
 	if err != nil {
-		log.Printf("Error when decoding request body\n%v", err)
-		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
+		log.WithFields(log.Fields{
+			"func":   "createList",
+			"info":   "error decoding request body",
+			"userID": user.ID,
+		}).Error(err)
+		c.JSON(http.StatusBadRequest, "Request body not properly formatted")
 		return
 	}
 
 	list, err := user.CreateList(server.db, &args)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "createList",
+			"subFunc": "user.CreateList",
+			"userID":  user.ID,
+			"args":    args,
+		}).Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}

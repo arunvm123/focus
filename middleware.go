@@ -1,13 +1,13 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/arunvm/travail-backend/config"
 	"github.com/arunvm/travail-backend/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func (server *server) tokenAuthorisationMiddleware() gin.HandlerFunc {
@@ -21,7 +21,10 @@ func (server *server) tokenAuthorisationMiddleware() gin.HandlerFunc {
 
 		user, err := server.getUserFromToken(token)
 		if err != nil {
-			log.Print(err)
+			log.WithFields(log.Fields{
+				"func":    "tokenAuthorisationMiddleware",
+				"subFunc": "server.getUserFromToken",
+			}).Error(err)
 			c.JSON(http.StatusUnauthorized, "Invalid user")
 			c.Abort()
 			return
@@ -36,7 +39,10 @@ func (server *server) tokenAuthorisationMiddleware() gin.HandlerFunc {
 func (server *server) getUserFromToken(token string) (*models.User, error) {
 	config, err := config.GetConfig()
 	if err != nil {
-		log.Printf("Error when fetching config\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "getUserFromToken",
+			"subFunc": "config.GetConfig",
+		}).Error(err)
 		return nil, err
 	}
 
@@ -44,7 +50,10 @@ func (server *server) getUserFromToken(token string) (*models.User, error) {
 		return []byte(config.JWTSecret), nil
 	})
 	if err != nil {
-		log.Printf("Error when parsing token\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "getUserFromToken",
+			"subFunc": "jwt.Parse",
+		}).Error(err)
 		return nil, err
 	}
 
@@ -52,7 +61,11 @@ func (server *server) getUserFromToken(token string) (*models.User, error) {
 
 	user, err := models.GetUserFromID(server.db, int(userID))
 	if err != nil {
-		log.Printf("Error when fetching user\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "getUserFromToken",
+			"subFunc": "models.GetUserFromID",
+			"userID":  int(userID),
+		}).Error(err)
 		return nil, err
 	}
 
