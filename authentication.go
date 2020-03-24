@@ -16,11 +16,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type loginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 func (server *server) signup(c *gin.Context) {
 	var args models.SignUpArgs
 	err := json.NewDecoder(c.Request.Body).Decode(&args)
@@ -63,7 +58,7 @@ func (server *server) signup(c *gin.Context) {
 }
 
 func (server *server) login(c *gin.Context) {
-	var loginData loginRequest
+	var loginData models.LoginArgs
 
 	err := json.NewDecoder(c.Request.Body).Decode(&loginData)
 	if err != nil {

@@ -39,6 +39,11 @@ type SignUpArgs struct {
 	Password string `json:"password"`
 }
 
+type LoginArgs struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type UpdateProfileArgs struct {
 	// Email    *string `json:"email,omitempty"`
 	Name     *string `json:"name,omitempty"`
