@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -14,6 +16,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 type loginRequest struct {
@@ -151,5 +155,51 @@ func (server *server) login(c *gin.Context) {
 		ID:    user.ID,
 		Name:  user.Name,
 	})
+	return
+}
+
+func (server *server) loginWithGoogle(c *gin.Context) {
+	var args struct {
+		Code string `json:"code"`
+	}
+
+	err := json.NewDecoder(c.Request.Body).Decode(&args)
+	if err != nil {
+		log.Printf("Error when decoding request body\n%v", err)
+		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
+		return
+	}
+
+	conf := &oauth2.Config{
+		ClientID:     "137580276273-7ihq4f337nc61r4vsu3a51bgigjt0ph1.apps.googleusercontent.com",
+		ClientSecret: "DHLcNlSb8cDHPVbEcWSU8PPz",
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.profile"},
+		Endpoint:     google.Endpoint,
+	}
+
+	ctx := context.Background()
+	tok, err := conf.Exchange(ctx, args.Code)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Println("Token = " + tok.AccessToken)
+
+	client := conf.Client(ctx, tok)
+
+	response, err := client.Get("https://www.googleapis.com/auth/userinfo.profile")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	defer response.Body.Close()
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, string(contents))
 	return
 }
