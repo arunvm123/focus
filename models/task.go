@@ -2,10 +2,10 @@ package models
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 // Task model
@@ -104,10 +104,16 @@ func (user *User) CreateTasks(db *gorm.DB, args *[]CreateTaskArgs) error {
 func (user *User) CreateTask(db *gorm.DB, task *Task) error {
 	list, err := getList(db, task.ListID)
 	if err != nil {
-		if err != gorm.ErrRecordNotFound {
-			log.Printf("Error when fetching users list\n%v", err)
-			return err
+		if err == gorm.ErrRecordNotFound {
+			return errors.New("No list with specified id")
 		}
+		log.WithFields(log.Fields{
+			"func":    "CreateTask",
+			"subFunc": "getList",
+			"userID":  user.ID,
+			"listID":  task.ListID,
+		}).Error(err)
+		return err
 	}
 
 	if list.UserID != user.ID {
@@ -124,6 +130,12 @@ func (user *User) CreateTask(db *gorm.DB, task *Task) error {
 	err = task.Create(tx)
 	if err != nil {
 		tx.Rollback()
+		log.WithFields(log.Fields{
+			"func":    "CreateTask",
+			"subFunc": "task.Create",
+			"userID":  user.ID,
+			"listID":  task.ListID,
+		}).Error(err)
 		return err
 	}
 
@@ -138,6 +150,12 @@ func (user *User) GetTasks(db *gorm.DB, args *GetTasksArgs) (*[]Task, error) {
 		Where("lists.archived = false AND tasks.archived = false AND lists.user_id = ? AND lists.id = ?", user.ID, args.ListID).
 		Select("tasks.*").Find(&tasks).Error
 	if err != nil {
+		log.WithFields(log.Fields{
+			"func":   "GetTasks",
+			"info":   "retrieving task details",
+			"userID": user.ID,
+			"listID": args.ListID,
+		}).Error(err)
 		return nil, err
 	}
 
@@ -147,7 +165,12 @@ func (user *User) GetTasks(db *gorm.DB, args *GetTasksArgs) (*[]Task, error) {
 func (user *User) UpdateTask(db *gorm.DB, args UpdateTaskArgs) error {
 	task, err := getTaskOfUser(db, user.ID, args.ID)
 	if err != nil {
-		log.Printf("Error fetching task\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "UpdateTask",
+			"subFunc": "getTasksOfUser",
+			"userID":  user.ID,
+			"taskID":  args.ID,
+		}).Error(err)
 		return err
 	}
 
@@ -172,7 +195,12 @@ func (user *User) UpdateTask(db *gorm.DB, args UpdateTaskArgs) error {
 
 	err = task.Save(db)
 	if err != nil {
-		log.Printf("Error updating task\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "UpdateTask",
+			"subFunc": "task.Save",
+			"userID":  user.ID,
+			"taskID":  args.ID,
+		}).Error(err)
 		return err
 	}
 
@@ -214,6 +242,12 @@ func getTaskOfUser(db *gorm.DB, userID int, taskID int) (*Task, error) {
 		Where("lists.archived = false AND tasks.archived = false AND lists.user_id = ? AND tasks.id = ?", userID, taskID).
 		Select("tasks.*").Find(&task).Error
 	if err != nil {
+		log.WithFields(log.Fields{
+			"func":   "getTaskOfUser",
+			"info":   "retrieving task info",
+			"taskID": taskID,
+			"userID": userID,
+		}).Error(err)
 		return nil, err
 	}
 

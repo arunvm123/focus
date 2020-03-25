@@ -2,10 +2,10 @@ package models
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 // List model
@@ -50,7 +50,11 @@ func getListOfUser(db *gorm.DB, userID int) (*List, error) {
 
 	err := db.Find(&list, "user_id = ? AND archived = false", userID).Error
 	if err != nil {
-		log.Printf("Error when fetching list\n%v", err)
+		log.WithFields(log.Fields{
+			"func":   "getListOfUser",
+			"info":   "retrieving all lists of user",
+			"userID": userID,
+		}).Error(err)
 		return nil, err
 	}
 
@@ -67,7 +71,12 @@ func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) (*List, error) {
 
 	err := list.Create(db)
 	if err != nil {
-		log.Printf("Error when creating list\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "CreateList",
+			"subFunc": "list.Create",
+			"userID":  user.ID,
+			"args":    *args,
+		}).Error(err)
 		return nil, err
 	}
 
@@ -86,7 +95,11 @@ func (user *User) GetLists(db *gorm.DB) (*[]ListInfo, error) {
 		Group("lists.id").
 		Find(&lists).Error
 	if err != nil {
-		log.Printf("Error when fethcing lists\n%v", err)
+		log.WithFields(log.Fields{
+			"func":   "GetLists",
+			"info":   "retrieving list info",
+			"userID": user.ID,
+		}).Error(err)
 		return nil, err
 	}
 
@@ -114,7 +127,12 @@ func (user *User) UpdateList(db *gorm.DB, args *UpdateListArgs) error {
 
 	err = list.Save(db)
 	if err != nil {
-		log.Printf("Error while updating list\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "UpdateList",
+			"subFunc": "list.Save",
+			"userID":  user.ID,
+			"listID":  args.ID,
+		}).Error(err)
 		return err
 	}
 
@@ -126,7 +144,11 @@ func getList(db *gorm.DB, listID int) (*List, error) {
 
 	err := db.Find(&list, "archived = false AND id = ?", listID).Error
 	if err != nil {
-		log.Printf("Error while fetching list\n%v", err)
+		log.WithFields(log.Fields{
+			"func":   "getList",
+			"info":   "retrieving list info",
+			"listID": listID,
+		}).Error(err)
 		return nil, err
 	}
 

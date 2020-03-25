@@ -1,9 +1,8 @@
 package models
 
 import (
-	"log"
-
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -66,7 +65,11 @@ func (user *User) UpdateProfile(db *gorm.DB, args UpdateProfileArgs) error {
 	if args.Password != nil {
 		passwordHash, err := bcrypt.GenerateFromPassword([]byte(*args.Password), bcrypt.DefaultCost)
 		if err != nil {
-			log.Printf("Error when hashing password\n%v", err)
+			log.WithFields(log.Fields{
+				"func":    "UpdateProfile",
+				"subFunc": "bcrypt.GenerateFromPassword",
+				"userID":  user.ID,
+			}).Error(err)
 			return err
 		}
 
@@ -75,7 +78,11 @@ func (user *User) UpdateProfile(db *gorm.DB, args UpdateProfileArgs) error {
 
 	err := user.Save(db)
 	if err != nil {
-		log.Printf("Error when updating user\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "UpdateProfile",
+			"subFunc": "user.Save",
+			"userID":  user.ID,
+		}).Error(err)
 		return err
 	}
 
@@ -88,6 +95,11 @@ func GetUserFromEmail(db *gorm.DB, email string) (*User, error) {
 
 	err := db.Find(&user, "email = ?", email).Error
 	if err != nil {
+		log.WithFields(log.Fields{
+			"func":  "GetUserFromEmail",
+			"info":  "retrieving user info from email",
+			"email": email,
+		}).Error(err)
 		return nil, err
 	}
 
@@ -100,6 +112,11 @@ func GetUserFromID(db *gorm.DB, userID int) (*User, error) {
 
 	err := db.Find(&user, "id = ?", userID).Error
 	if err != nil {
+		log.WithFields(log.Fields{
+			"func":   "GetUserFromID",
+			"info":   "retrieving user info from id",
+			"userID": userID,
+		}).Error(err)
 		return nil, err
 	}
 
@@ -110,10 +127,12 @@ func CheckIfUserExists(db *gorm.DB, email string) bool {
 	var count int
 	err := db.Table("users").Where("email = ?", email).Count(&count).Error
 	if err != nil {
-		if err != gorm.ErrRecordNotFound {
-			log.Printf("Error when checking if user exists\n%v", err)
-			return true
-		}
+		log.WithFields(log.Fields{
+			"func":  "CheckIfUserExists",
+			"info":  "checking if user with specified email exitst",
+			"email": email,
+		}).Error(err)
+		return true
 	}
 
 	if count > 0 {
@@ -131,7 +150,11 @@ func UserSignup(db *gorm.DB, args *SignUpArgs) (*User, error) {
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Printf("Error when hashing password\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "UserSignup",
+			"subFunc": "bcrypt.GenerateFromPassword",
+			"email":   args.Email,
+		}).Error(err)
 		return nil, err
 	}
 
@@ -140,7 +163,11 @@ func UserSignup(db *gorm.DB, args *SignUpArgs) (*User, error) {
 
 	err = user.Create(db)
 	if err != nil {
-		log.Printf("Error when inserting data to database\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "UserSignup",
+			"subFunc": "user.Create",
+			"email":   args.Email,
+		}).Error(err)
 		return nil, err
 	}
 

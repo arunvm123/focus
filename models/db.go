@@ -1,9 +1,8 @@
 package models
 
 import (
-	"log"
-
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 func MigrateDB(db *gorm.DB) {
