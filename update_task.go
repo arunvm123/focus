@@ -2,42 +2,48 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 func (server *server) updateTask(c *gin.Context) {
 	var args models.UpdateTaskArgs
 
-	err := json.NewDecoder(c.Request.Body).Decode(&args)
+	user, err := getUserFromContext(c)
 	if err != nil {
-		log.Printf("Error when decoding request body\n%v", err)
-		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
+		log.WithFields(log.Fields{
+			"func":    "updateTask",
+			"subFunc": "getUserFromContext",
+		}).Error(err)
+		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
-	user, ok := c.Keys["user"].(*models.User)
-	if !ok {
-		log.Println("Unable to fetch user")
-		c.JSON(http.StatusInternalServerError, "Error fetching user")
+	err = json.NewDecoder(c.Request.Body).Decode(&args)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":   "updateTask",
+			"info":   "error decoding request body",
+			"userID": user.ID,
+		}).Error(err)
+		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
 		return
 	}
 
 	err = user.UpdateTask(server.db, args)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, "No such task")
-			return
-		}
-		log.Printf("Error when updating task\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "updateTask",
+			"subFunc": "user.UpdateTask",
+			"userID":  user.ID,
+		}).Error(err)
 		c.JSON(http.StatusInternalServerError, "Error when updating task")
 		return
 	}
 
-	c.JSON(http.StatusOK, nil)
+	c.Status(http.StatusOK)
 	return
 }

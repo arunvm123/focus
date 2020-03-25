@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func (server *server) verifyEmail(c *gin.Context) {
@@ -14,13 +14,20 @@ func (server *server) verifyEmail(c *gin.Context) {
 
 	err := json.NewDecoder(c.Request.Body).Decode(&token)
 	if err != nil {
-		log.Printf("Error when decoding request body\n%v", err)
+		log.WithFields(log.Fields{
+			"func": "verifyEmail",
+			"info": "error decoding request body",
+		}).Error(err)
 		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
 		return
 	}
 
 	err = models.VerifyEmail(server.db, token.Token)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "verifyEmail",
+			"subFunc": "models.VerifyEmail",
+		}).Error(err)
 		c.JSON(http.StatusInternalServerError, "Error verifying email")
 		return
 	}

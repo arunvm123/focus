@@ -2,33 +2,45 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func (server *server) createTask(c *gin.Context) {
 	var task *models.Task
 
-	err := json.NewDecoder(c.Request.Body).Decode(&task)
+	user, err := getUserFromContext(c)
 	if err != nil {
-		log.Printf("Error when decoding request body\n%v", err)
-		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
+		log.WithFields(log.Fields{
+			"func":    "createTask",
+			"subFunc": "getUserFromContext",
+		}).Error(err)
+		c.JSON(http.StatusInternalServerError, "Error fetching user")
 		return
 	}
 
-	user, err := getUserFromContext(c)
+	err = json.NewDecoder(c.Request.Body).Decode(&task)
 	if err != nil {
-		log.Println("Unable to fetch user")
-		c.JSON(http.StatusInternalServerError, "Error fetching user")
+		log.WithFields(log.Fields{
+			"func":   "createTask",
+			"info":   "error decoding request body",
+			"userID": user.ID,
+		}).Error(err)
+		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
 		return
 	}
 
 	err = user.CreateTask(server.db, task)
 	if err != nil {
-		log.Printf("Error creating task")
+		log.WithFields(log.Fields{
+			"func":    "createTask",
+			"subFunc": "user.CreateTask",
+			"userID":  user.ID,
+			"args":    task,
+		}).Error(err)
 		c.JSON(http.StatusInternalServerError, "Error when creating task")
 		return
 	}

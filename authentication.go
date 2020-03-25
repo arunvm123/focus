@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -24,7 +24,10 @@ func (server *server) signup(c *gin.Context) {
 	var args models.SignUpArgs
 	err := json.NewDecoder(c.Request.Body).Decode(&args)
 	if err != nil {
-		log.Printf("Error when decoding request body\n%v", err)
+		log.WithFields(log.Fields{
+			"func": "signup",
+			"info": "decoding request body",
+		}).Error(err)
 		c.JSON(http.StatusBadRequest, "Request body not properly formatted")
 		return
 	}
@@ -38,6 +41,11 @@ func (server *server) signup(c *gin.Context) {
 	user, err := models.UserSignup(tx, &args)
 	if err != nil {
 		tx.Rollback()
+		log.WithFields(log.Fields{
+			"func":    "signup",
+			"subFunc": "models.UserSignup",
+			"email":   args.Email,
+		})
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -45,6 +53,11 @@ func (server *server) signup(c *gin.Context) {
 	token, err := models.CreateEmailValidationToken(tx, user)
 	if err != nil {
 		tx.Rollback()
+		log.WithFields(log.Fields{
+			"func":    "signup",
+			"subFunc": "models.CreateEmailValidationToken",
+			"email":   user.Email,
+		})
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -52,6 +65,11 @@ func (server *server) signup(c *gin.Context) {
 	err = emails.SendValidationEmail(server.email, user, token)
 	if err != nil {
 		tx.Rollback()
+		log.WithFields(log.Fields{
+			"func":    "signup",
+			"subFunc": "emails.SendValidationEmail",
+			"email":   user.Email,
+		})
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -66,7 +84,10 @@ func (server *server) login(c *gin.Context) {
 
 	err := json.NewDecoder(c.Request.Body).Decode(&loginData)
 	if err != nil {
-		log.Printf("Error when decoding request body\n%v", err)
+		log.WithFields(log.Fields{
+			"func": "login",
+			"info": "decoding request body",
+		}).Error(err)
 		c.JSON(http.StatusBadRequest, "Request body not properly formatted")
 		return
 	}
@@ -77,7 +98,11 @@ func (server *server) login(c *gin.Context) {
 			c.JSON(http.StatusOK, "User does not exist, Please sign up")
 			return
 		}
-		log.Printf("Error when looking up user with email\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "login",
+			"subFunc": "models.GetUserFromEmail",
+			"email":   loginData.Email,
+		}).Error(err)
 		c.JSON(http.StatusInternalServerError, "Server error")
 		return
 	}
@@ -89,7 +114,11 @@ func (server *server) login(c *gin.Context) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginData.Password))
 	if err != nil {
-		log.Printf("Passwords do not match\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "login",
+			"subFunc": "bcrypt.CompareHashAndPassword",
+			"email":   user.Email,
+		}).Error(err)
 		c.JSON(http.StatusUnauthorized, "Wrong password")
 		return
 	}
@@ -101,14 +130,22 @@ func (server *server) login(c *gin.Context) {
 
 	config, err := config.GetConfig()
 	if err != nil {
-		log.Printf("Failed to read config file\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "login",
+			"subFunc": "config.GetConfig",
+			"email":   user.Email,
+		}).Error(err)
 		c.JSON(http.StatusInternalServerError, "Server error")
 		return
 	}
 
 	signedToken, err := token.SignedString([]byte(config.JWTSecret))
 	if err != nil {
-		log.Printf("Error when signing token\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "login",
+			"subFunc": "token.SignedString",
+			"email":   user.Email,
+		}).Error(err)
 		c.JSON(http.StatusInternalServerError, "Server error")
 		return
 	}

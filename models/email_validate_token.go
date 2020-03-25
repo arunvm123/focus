@@ -3,10 +3,10 @@ package models
 import (
 	"crypto/rand"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 type EmailValidateToken struct {
@@ -42,7 +42,11 @@ func CreateEmailValidationToken(db *gorm.DB, user *User) (string, error) {
 
 	err := ev.Create(db)
 	if err != nil {
-		log.Printf("Error when inserting token details into DB")
+		log.WithFields(log.Fields{
+			"func":    "CreateEmailValidationToken",
+			"subFunc": "ev.Create",
+			"userID":  user.ID,
+		}).Error(err)
 		return "", err
 	}
 
@@ -54,13 +58,20 @@ func VerifyEmail(db *gorm.DB, token string) error {
 
 	err := db.Find(&ev, "token = ?", token).Error
 	if err != nil {
-		log.Printf("Error fetching token details\n%v", err)
+		log.WithFields(log.Fields{
+			"func": "VerifyEmail",
+			"info": "error retrieving token from db",
+		}).Error(err)
 		return err
 	}
 
-	err = db.Table("users").UpdateColumn("verified", true).Error
+	err = db.Table("users").Where("id = ?", ev.UserID).UpdateColumn("verified", true).Error
 	if err != nil {
-		log.Printf("Error updating verified status\n%v", err)
+		log.WithFields(log.Fields{
+			"func":   "VerifyEmail",
+			"info":   "setting email verified as true",
+			"userID": ev.UserID,
+		}).Error(err)
 		return err
 	}
 

@@ -1,12 +1,11 @@
 package emails
 
 import (
-	"log"
-
 	"github.com/arunvm/travail-backend/config"
 	"github.com/arunvm/travail-backend/models"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -22,7 +21,11 @@ func SendValidationEmail(emailCLient *sendgrid.Client, user *models.User, token 
 
 	c, err := config.GetConfig()
 	if err != nil {
-		log.Printf("Error reading config\n%v", err)
+		log.WithFields(log.Fields{
+			"func":    "SendValidationEmail",
+			"subFunc": "config.GetConfig",
+			"userID":  user.ID,
+		}).Error(err)
 		return err
 	}
 
@@ -49,7 +52,11 @@ func sendEmail(emailCLient *sendgrid.Client, to []*mail.Email, templateData map[
 
 	resp, err := emailCLient.Send(email)
 	if err != nil {
-		log.Println(err)
+		log.WithFields(log.Fields{
+			"func":       "sendEmail",
+			"subFunc":    "emailCLient.Send",
+			"templateID": templateID,
+		}).Error(err)
 		return err
 	}
 

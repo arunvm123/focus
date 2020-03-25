@@ -2,16 +2,20 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func (server *server) updateList(c *gin.Context) {
 	user, err := getUserFromContext(c)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "updateList",
+			"subFunc": "getUserFromContext",
+		}).Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -19,17 +23,26 @@ func (server *server) updateList(c *gin.Context) {
 	var args models.UpdateListArgs
 	err = json.NewDecoder(c.Request.Body).Decode(&args)
 	if err != nil {
-		log.Printf("Error when decoding request body\n%v", err)
+		log.WithFields(log.Fields{
+			"func":   "updateList",
+			"info":   "error decoding request body",
+			"userID": user.ID,
+		}).Error(err)
 		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
 		return
 	}
 
 	err = user.UpdateList(server.db, &args)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "updateList",
+			"subFunc": "user.UpdateList",
+			"userID":  user.ID,
+		}).Error(err)
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, nil)
+	c.Status(http.StatusOK)
 	return
 }

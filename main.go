@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/rs/cors"
@@ -14,6 +13,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/sendgrid/sendgrid-go"
+	log "github.com/sirupsen/logrus"
 )
 
 type server struct {
@@ -29,6 +29,8 @@ func newServer() *server {
 
 func main() {
 	server := newServer()
+
+	log.SetFormatter(&log.JSONFormatter{})
 
 	config, err := config.GetConfig()
 	if err != nil {
