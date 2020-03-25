@@ -148,7 +148,7 @@ func UserSignup(db *gorm.DB, args *SignUpArgs) (*User, error) {
 	user.Email = args.Email
 	user.Name = args.Name
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(args.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "UserSignup",
