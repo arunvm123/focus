@@ -35,7 +35,7 @@ type ListInfo struct {
 
 // CreateListArgs defines the args for create list api
 type CreateListArgs struct {
-	Heading string `json:"heading"`
+	Heading string `json:"heading" binding:"exists"`
 }
 
 // UpdateListArgs defines the args for update list api
