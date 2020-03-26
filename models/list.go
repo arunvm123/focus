@@ -87,7 +87,7 @@ func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) (*List, error) {
 func (user *User) GetLists(db *gorm.DB) (*[]ListInfo, error) {
 	var lists []ListInfo
 
-	err := db.Table("lists").Joins("JOIN tasks on lists.id = tasks.list_id").
+	err := db.Table("lists").Joins("LEFT JOIN tasks on lists.id = tasks.list_id").
 		Select("lists.*,"+
 			"sum(case when complete = true then 1 else 0 end) as completed_tasks,"+
 			"sum(case when complete = false then 1 else 0 end) as pending_tasks").
