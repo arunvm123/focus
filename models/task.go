@@ -33,8 +33,8 @@ func (t *Task) Save(db *gorm.DB) error {
 
 type CreateTaskArgs struct {
 	ListID    int    `json:"listID" binding:"required"`
-	Info      string `json:"info" binding:"exists"`
-	Order     int    `json:"order" binding:"exists"`
+	Info      string `json:"info"`
+	Order     int    `json:"order"`
 	ExpiresAt *int64 `json:"expiresAt"`
 }
 
