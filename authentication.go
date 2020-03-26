@@ -22,7 +22,7 @@ import (
 
 func (server *server) signup(c *gin.Context) {
 	var args models.SignUpArgs
-	err := json.NewDecoder(c.Request.Body).Decode(&args)
+	err := c.ShouldBindJSON(&args)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func": "signup",
@@ -82,7 +82,7 @@ func (server *server) signup(c *gin.Context) {
 func (server *server) login(c *gin.Context) {
 	var loginData models.LoginArgs
 
-	err := json.NewDecoder(c.Request.Body).Decode(&loginData)
+	err := c.ShouldBindJSON(&loginData)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func": "login",

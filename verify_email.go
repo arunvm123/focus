@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/arunvm/travail-backend/models"
@@ -12,7 +11,7 @@ import (
 func (server *server) verifyEmail(c *gin.Context) {
 	var token models.ValidateEmailArgs
 
-	err := json.NewDecoder(c.Request.Body).Decode(&token)
+	err := c.ShouldBindJSON(&token)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func": "verifyEmail",

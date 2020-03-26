@@ -32,17 +32,18 @@ func (t *Task) Save(db *gorm.DB) error {
 }
 
 type CreateTaskArgs struct {
-	Info      string `json:"info"`
-	Order     int    `json:"order"`
+	ListID    int    `json:"listID" binding:"required"`
+	Info      string `json:"info" binding:"required"`
+	Order     int    `json:"order" binding:"required"`
 	ExpiresAt *int64 `json:"expiresAt"`
 }
 
 type GetTasksArgs struct {
-	ListID int `json:"listID"`
+	ListID int `json:"listID" binding:"required"`
 }
 
 type UpdateTaskArgs struct {
-	ID        int     `json:"id"`
+	ID        int     `json:"id" binding:"required"`
 	Info      *string `json:"info"`
 	Order     *int    `json:"order"`
 	Complete  *bool   `json:"complete"`
@@ -101,27 +102,31 @@ func (user *User) CreateTasks(db *gorm.DB, args *[]CreateTaskArgs) error {
 	return nil
 }
 
-func (user *User) CreateTask(db *gorm.DB, task *Task) error {
-	list, err := getList(db, task.ListID)
+func (user *User) CreateTask(db *gorm.DB, args *CreateTaskArgs) (*Task, error) {
+	list, err := getList(db, args.ListID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.New("No list with specified id")
+			return nil, errors.New("No list with specified id")
 		}
 		log.WithFields(log.Fields{
 			"func":    "CreateTask",
 			"subFunc": "getList",
 			"userID":  user.ID,
-			"listID":  task.ListID,
+			"listID":  args.ListID,
 		}).Error(err)
-		return err
+		return nil, err
 	}
 
 	if list.UserID != user.ID {
-		return errors.New("Not user's list")
+		return nil, errors.New("Not user's list")
 	}
+	var task Task
 
 	tx := db.Begin()
 
+	task.Info = args.Info
+	task.Order = args.Order
+	task.ExpiresAt = args.ExpiresAt
 	task.ListID = list.ID
 	task.Archived = false
 	task.Complete = false
@@ -136,11 +141,11 @@ func (user *User) CreateTask(db *gorm.DB, task *Task) error {
 			"userID":  user.ID,
 			"listID":  task.ListID,
 		}).Error(err)
-		return err
+		return nil, err
 	}
 
 	tx.Commit()
-	return nil
+	return &task, nil
 }
 
 func (user *User) GetTasks(db *gorm.DB, args *GetTasksArgs) (*[]Task, error) {

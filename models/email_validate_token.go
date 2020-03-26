@@ -27,7 +27,7 @@ func (ev *EmailValidateToken) Save(db *gorm.DB) error {
 }
 
 type ValidateEmailArgs struct {
-	Token string `json:"token"`
+	Token string `json:"token" binding:"required"`
 }
 
 func CreateEmailValidationToken(db *gorm.DB, user *User) (string, error) {

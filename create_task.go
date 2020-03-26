@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/arunvm/travail-backend/models"
@@ -10,7 +9,7 @@ import (
 )
 
 func (server *server) createTask(c *gin.Context) {
-	var task *models.Task
+	var args models.CreateTaskArgs
 
 	user, err := getUserFromContext(c)
 	if err != nil {
@@ -22,7 +21,7 @@ func (server *server) createTask(c *gin.Context) {
 		return
 	}
 
-	err = json.NewDecoder(c.Request.Body).Decode(&task)
+	err = c.ShouldBindJSON(&args)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":   "createTask",
@@ -33,13 +32,13 @@ func (server *server) createTask(c *gin.Context) {
 		return
 	}
 
-	err = user.CreateTask(server.db, task)
+	task, err := user.CreateTask(server.db, &args)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "createTask",
 			"subFunc": "user.CreateTask",
 			"userID":  user.ID,
-			"args":    task,
+			"args":    args,
 		}).Error(err)
 		c.JSON(http.StatusInternalServerError, "Error when creating task")
 		return
