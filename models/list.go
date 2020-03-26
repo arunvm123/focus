@@ -89,9 +89,9 @@ func (user *User) GetLists(db *gorm.DB) (*[]ListInfo, error) {
 
 	err := db.Table("lists").Joins("LEFT JOIN tasks on lists.id = tasks.list_id").
 		Select("lists.*,"+
-			"sum(case when complete = true then 1 else 0 end) as completed_tasks,"+
-			"sum(case when complete = false then 1 else 0 end) as pending_tasks").
-		Where("lists.archived = false AND tasks.archived = false AND lists.user_id = ?", user.ID).
+			"sum(case when complete = true AND tasks.archived = false then 1 else 0 end) as completed_tasks,"+
+			"sum(case when complete = false AND tasks.archived = false then 1 else 0 end) as pending_tasks").
+		Where("lists.archived = false AND lists.user_id = ?", user.ID).
 		Group("lists.id").
 		Find(&lists).Error
 	if err != nil {
