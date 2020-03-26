@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/arunvm/travail-backend/models"
@@ -21,7 +20,7 @@ func (server *server) updateList(c *gin.Context) {
 	}
 
 	var args models.UpdateListArgs
-	err = json.NewDecoder(c.Request.Body).Decode(&args)
+	err = c.ShouldBindJSON(&args)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":   "updateList",

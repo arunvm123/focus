@@ -40,7 +40,7 @@ type CreateListArgs struct {
 
 // UpdateListArgs defines the args for update list api
 type UpdateListArgs struct {
-	ID       int     `json:"id"`
+	ID       int     `json:"id" binding:"required"`
 	Heading  *string `json:"heading,omitempty"`
 	Archived *bool   `json:"archived,omitempty"`
 }
