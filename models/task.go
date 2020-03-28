@@ -153,6 +153,7 @@ func (user *User) GetTasks(db *gorm.DB, args *GetTasksArgs) (*[]Task, error) {
 
 	err := db.Table("lists").Joins("JOIN tasks on tasks.list_id = lists.id").
 		Where("lists.archived = false AND tasks.archived = false AND lists.user_id = ? AND lists.id = ?", user.ID, args.ListID).
+		Order("order").
 		Select("tasks.*").Find(&tasks).Error
 	if err != nil {
 		log.WithFields(log.Fields{
