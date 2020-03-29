@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -16,8 +15,6 @@ import (
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
 
 func (server *server) signup(c *gin.Context) {
@@ -123,91 +120,173 @@ func (server *server) login(c *gin.Context) {
 		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":  user.ID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
-	})
-
-	config, err := config.GetConfig()
+	signedToken, err := getJWTToken(user.ID)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"func":    "login",
-			"subFunc": "config.GetConfig",
-			"email":   user.Email,
-		}).Error(err)
-		c.JSON(http.StatusInternalServerError, "Server error")
-		return
-	}
-
-	signedToken, err := token.SignedString([]byte(config.JWTSecret))
-	if err != nil {
-		log.WithFields(log.Fields{
-			"func":    "login",
+			"func":    "getJWTToken",
 			"subFunc": "token.SignedString",
 			"email":   user.Email,
 		}).Error(err)
-		c.JSON(http.StatusInternalServerError, "Server error")
+		c.JSON(http.StatusInternalServerError, "Error while retrieving token")
 		return
 	}
 
 	c.SetCookie("Authorization", signedToken, 0, "", "travail.in", false, false)
 
 	c.JSON(http.StatusOK, struct {
-		Token string `json:"token"`
-		Name  string `json:"name"`
-		ID    int    `json:"id"`
-		Email string `json:"email"`
+		Token      string  `json:"token"`
+		Name       string  `json:"name"`
+		ID         int     `json:"id"`
+		Email      string  `json:"email"`
+		ProfilePic *string `json:"profilePic"`
 	}{
-		Token: signedToken,
-		Email: user.Email,
-		ID:    user.ID,
-		Name:  user.Name,
+		Token:      signedToken,
+		Email:      user.Email,
+		ID:         user.ID,
+		Name:       user.Name,
+		ProfilePic: user.ProfilePic,
 	})
 	return
 }
 
 func (server *server) loginWithGoogle(c *gin.Context) {
 	var args struct {
-		Code string `json:"code"`
+		AccessToken string `json:"access_token" binding:"required"`
 	}
 
-	err := json.NewDecoder(c.Request.Body).Decode(&args)
+	err := c.ShouldBindJSON(&args)
 	if err != nil {
-		log.Printf("Error when decoding request body\n%v", err)
-		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
+		log.WithFields(log.Fields{
+			"func": "loginWithGoogle",
+			"info": "decoding request body",
+		}).Error(err)
+		c.JSON(http.StatusBadRequest, "Request body not properly formatted")
 		return
 	}
 
-	conf := &oauth2.Config{
-		ClientID:     "137580276273-7ihq4f337nc61r4vsu3a51bgigjt0ph1.apps.googleusercontent.com",
-		ClientSecret: "DHLcNlSb8cDHPVbEcWSU8PPz",
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.profile"},
-		Endpoint:     google.Endpoint,
-	}
-
-	ctx := context.Background()
-	tok, err := conf.Exchange(ctx, args.Code)
+	response, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + args.AccessToken)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		log.WithFields(log.Fields{
+			"func": "loginWithGoogle",
+			"info": "retrieving user info from google",
+		}).Error(err)
+		c.JSON(http.StatusInternalServerError, "Internal error")
 		return
 	}
 
-	log.Println("Token = " + tok.AccessToken)
-
-	client := conf.Client(ctx, tok)
-
-	response, err := client.Get("https://www.googleapis.com/auth/userinfo.profile")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
 	defer response.Body.Close()
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		log.WithFields(log.Fields{
+			"func":    "loginWithGoogle",
+			"subFunc": "ioutil.ReadAll",
+		}).Error(err)
+		c.JSON(http.StatusInternalServerError, "error reading response")
 		return
 	}
 
-	c.JSON(http.StatusOK, string(contents))
+	var userInfo models.LoginWithGoogleArgs
+	err = json.Unmarshal(contents, &userInfo)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func": "loginWithGoogle",
+			"info": "unmarshalling info to struct",
+		}).Error(err)
+		c.JSON(http.StatusInternalServerError, "Error unmarshalling data")
+		return
+	}
+
+	// When fetching user info from google api, if the access token is invalid, it doesnt raise an error
+	// This is to ensure that valid info was retrieved.
+	if userInfo.Email == "" {
+		c.JSON(http.StatusUnauthorized, "Invalid access token")
+		return
+	}
+
+	var user *models.User
+	if models.CheckIfUserExists(server.db, userInfo.Email) == true {
+		user, err = models.GetUserFromEmail(server.db, userInfo.Email)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"func":    "loginWithGoogle",
+				"subFunc": "models.GetUserFromEmail",
+				"email":   userInfo.Email,
+			}).Error(err)
+			c.JSON(http.StatusInternalServerError, "Error when fetching user details")
+			return
+		}
+
+		if user.GoogleOauth == false {
+			c.JSON(http.StatusUnauthorized, "Login with email and password")
+			return
+		}
+	} else {
+		user, err = models.SignUpWithGoogle(server.db, &userInfo)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"func":    "loginWithGoogle",
+				"subFunc": "models.SignUpWithGoogle",
+				"email":   userInfo.Email,
+			}).Error(err)
+			c.JSON(http.StatusInternalServerError, "Error when signing up with google")
+			return
+		}
+	}
+
+	signedToken, err := getJWTToken(user.ID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "loginWithGoogle",
+			"subFunc": "getJWTToken",
+			"userID":  user.ID,
+		}).Error(err)
+		c.JSON(http.StatusInternalServerError, "Error while retrieving token")
+		return
+	}
+
+	c.SetCookie("Authorization", signedToken, 0, "", "travail.in", false, false)
+
+	c.JSON(http.StatusOK, struct {
+		Token      string  `json:"token"`
+		Name       string  `json:"name"`
+		ID         int     `json:"id"`
+		Email      string  `json:"email"`
+		ProfilePic *string `json:"profilePic"`
+	}{
+		Token:      signedToken,
+		Email:      user.Email,
+		ID:         user.ID,
+		Name:       user.Name,
+		ProfilePic: user.ProfilePic,
+	})
 	return
+}
+
+func getJWTToken(userID int) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":  userID,
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	config, err := config.GetConfig()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "getJWTToken",
+			"subFunc": "config.GetConfig",
+			"userID":  userID,
+		}).Error(err)
+		return "", err
+	}
+
+	signedToken, err := token.SignedString([]byte(config.JWTSecret))
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "getJWTToken",
+			"subFunc": "token.SignedString",
+			"userID":  userID,
+		}).Error(err)
+		return "", err
+	}
+
+	return signedToken, nil
 }

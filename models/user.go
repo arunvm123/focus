@@ -8,11 +8,13 @@ import (
 
 // User model
 type User struct {
-	ID       int    `json:"id" gorm:"primary_key"`
-	Email    string `json:"email" gorm:"unique;not null"`
-	Name     string `json:"name"`
-	Password string `json:"password"`
-	Verified bool   `json:"verified"`
+	ID          int     `json:"id" gorm:"primary_key"`
+	Email       string  `json:"email" gorm:"unique;not null"`
+	Name        string  `json:"name"`
+	Password    string  `json:"password"`
+	Verified    bool    `json:"verified"`
+	ProfilePic  *string `json:"profilePic"`
+	GoogleOauth bool    `json:"googleOauth"`
 }
 
 // Create is a helper function to create a new user
@@ -41,6 +43,12 @@ type SignUpArgs struct {
 type LoginArgs struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+}
+
+type LoginWithGoogleArgs struct {
+	Email   string  `json:"email" binding:"required,email"`
+	Name    string  `json:"name" binding:"required"`
+	Picture *string `json:"picture"`
 }
 
 type UpdateProfileArgs struct {
@@ -160,11 +168,34 @@ func UserSignup(db *gorm.DB, args *SignUpArgs) (*User, error) {
 
 	user.Password = string(passwordHash)
 	user.Verified = false
+	user.GoogleOauth = false
 
 	err = user.Create(db)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "UserSignup",
+			"subFunc": "user.Create",
+			"email":   args.Email,
+		}).Error(err)
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func SignUpWithGoogle(db *gorm.DB, args *LoginWithGoogleArgs) (*User, error) {
+	var user User
+
+	user.Email = args.Email
+	user.Name = args.Name
+	user.ProfilePic = args.Picture
+	user.Verified = true
+	user.GoogleOauth = true
+
+	err := user.Create(db)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "SignUpWithGoogle",
 			"subFunc": "user.Create",
 			"email":   args.Email,
 		}).Error(err)
