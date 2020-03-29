@@ -28,5 +28,8 @@ func initialiseRoutes(server *server) *gin.Engine {
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)
 
+	private.POST("/add/notification/token", server.addNotificationToken)
+	// private.GET("/get/notification/tokens", server.getNotificationTokens)
+
 	return r
 }

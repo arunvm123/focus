@@ -10,7 +10,7 @@ import (
 )
 
 type EmailValidateToken struct {
-	UserID    int    `json:"uesrId" gorm:"primary_key"`
+	UserID    int    `json:"userID" gorm:"primary_key"`
 	Token     string `json:"token"`
 	CreatedAt int64  `json:"createdAt"`
 	ExpiresAt int64  `json:"expiresAt"`
