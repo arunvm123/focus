@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"net/http"
 
+	firebase "firebase.google.com/go"
+	"firebase.google.com/go/messaging"
 	"github.com/rs/cors"
+	"google.golang.org/api/option"
 
 	"github.com/arunvm/travail-backend/config"
 
@@ -17,9 +21,10 @@ import (
 )
 
 type server struct {
-	db     *gorm.DB
-	routes *gin.Engine
-	email  *sendgrid.Client
+	db         *gorm.DB
+	routes     *gin.Engine
+	email      *sendgrid.Client
+	pushClient *messaging.Client
 }
 
 func newServer() *server {
@@ -30,8 +35,10 @@ func newServer() *server {
 func main() {
 	server := newServer()
 
+	// Logging options
 	log.SetFormatter(&log.JSONFormatter{})
 
+	// Reading config variables
 	config, err := config.GetConfig()
 	if err != nil {
 		log.Fatalf("Failed to read config\n%v", err)
@@ -49,8 +56,19 @@ func main() {
 	// email client
 	server.email = sendgrid.NewSendClient(config.SendgridKey)
 
-	server.routes = initialiseRoutes(server)
+	// FCM push notification
+	firebaseApp, err := firebase.NewApp(context.Background(), nil, option.WithCredentialsFile(config.FCMServiceAccountKeyPath))
+	if err != nil {
+		log.Fatalf("error when initialising firebase app\n%v", err)
+	}
 
+	server.pushClient, err = firebaseApp.Messaging(context.Background())
+	if err != nil {
+		log.Fatalf("error when initialising FCM push notification client\n%v", err)
+	}
+
+	// Setting up routes
+	server.routes = initialiseRoutes(server)
 	routes := cors.AllowAll().Handler(server.routes)
 
 	http.ListenAndServeTLS(":5000", "./certs/fullchain.pem", "./certs/privkey.pem", routes)

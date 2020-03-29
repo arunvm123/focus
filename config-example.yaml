@@ -7,3 +7,4 @@ database:
   port: "<PORT>"
 jwt_secret: "<JWT_SECRET>"
 sendgrid_key: "<SENDGRID_KEY>"
+fcm_service_acccount_key_path: "<SERVICE_ACCOUNT_KEY>"

@@ -6,10 +6,11 @@ import (
 
 // Config lists out configuration for all dependencies
 type Config struct {
-	DomainURL   string         `yaml:"domain_url"`
-	Database    DatabaseConfig `yaml:"database"`
-	JWTSecret   string         `yaml:"jwt_secret"`
-	SendgridKey string         `yaml:"sendgrid_key"`
+	DomainURL                string         `yaml:"domain_url"`
+	Database                 DatabaseConfig `yaml:"database"`
+	JWTSecret                string         `yaml:"jwt_secret"`
+	SendgridKey              string         `yaml:"sendgrid_key"`
+	FCMServiceAccountKeyPath string         `yaml:"fcm_service_account_key_path"`
 }
 
 // DatabaseConfig defines structure for database configuration
