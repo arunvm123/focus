@@ -54,7 +54,7 @@ func SendForgotPasswordEmail(emailClient *sendgrid.Client, user *models.User, to
 
 	return sendEmail(emailClient, to, map[string]interface{}{
 		"name": user.Name,
-		"link": c.DomainURL + "forgotpassword/password/reset?token=" + token,
+		"link": c.DomainURL + "forgot/module?token=" + token,
 	}, forgotPassword)
 }
 
