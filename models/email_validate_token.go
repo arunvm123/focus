@@ -37,7 +37,7 @@ func CreateEmailValidationToken(db *gorm.DB, user *User) (string, error) {
 	ev := &EmailValidateToken{
 		UserID:     user.ID,
 		CreatedAt:  createdAt,
-		ExpiresAt:  createdAt + int64(time.Hour*24*60),
+		ExpiresAt:  createdAt + int64(24*60*60),
 		Token:      randToken(),
 		Invalidate: false,
 	}

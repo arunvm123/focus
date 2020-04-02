@@ -10,9 +10,10 @@ import (
 
 const (
 	emailValidation string = "d-71b7ba0ed167416d8b07178b45cd2297"
+	forgotPassword  string = "d-1ed04ad46478427d9970ba1b5a5a3033"
 )
 
-func SendValidationEmail(emailCLient *sendgrid.Client, user *models.User, token string) error {
+func SendValidationEmail(emailClient *sendgrid.Client, user *models.User, token string) error {
 	to := []*mail.Email{}
 	to = append(to, &mail.Email{
 		Name:    user.Name,
@@ -29,9 +30,32 @@ func SendValidationEmail(emailCLient *sendgrid.Client, user *models.User, token 
 		return err
 	}
 
-	return sendEmail(emailCLient, to, map[string]interface{}{
+	return sendEmail(emailClient, to, map[string]interface{}{
 		"validation_link": c.DomainURL + "verify/module?token=" + token,
 	}, emailValidation)
+}
+
+func SendForgotPasswordEmail(emailClient *sendgrid.Client, user *models.User, token string) error {
+	to := []*mail.Email{}
+	to = append(to, &mail.Email{
+		Name:    user.Name,
+		Address: user.Email,
+	})
+
+	c, err := config.GetConfig()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "SendForgotPasswordnEmail",
+			"subFunc": "config.GetConfig",
+			"userID":  user.ID,
+		}).Error(err)
+		return err
+	}
+
+	return sendEmail(emailClient, to, map[string]interface{}{
+		"name": user.Name,
+		"link": c.DomainURL + "forgotpassword/password/reset?token=" + token,
+	}, forgotPassword)
 }
 
 func sendEmail(emailCLient *sendgrid.Client, to []*mail.Email, templateData map[string]interface{}, templateID string) error {

@@ -83,5 +83,6 @@ func (server *server) resendVerifyEmail(c *gin.Context) {
 	}
 
 	tx.Commit()
+	c.Status(http.StatusOK)
 	return
 }
