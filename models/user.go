@@ -57,6 +57,11 @@ type UpdateProfileArgs struct {
 	Password *string `json:"password,omitempty"`
 }
 
+type UpdatePasswordArgs struct {
+	CurrentPassword string `json:"currentPassword" binding:"required"`
+	NewPassword     string `json:"newPassword" binding:"required"`
+}
+
 // GetProfile organises user data and returns it
 func (user *User) GetProfile() (*UserProfile, error) {
 	return &UserProfile{
@@ -203,4 +208,39 @@ func SignUpWithGoogle(db *gorm.DB, args *LoginWithGoogleArgs) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func (user *User) UpdatePassword(db *gorm.DB, args *UpdatePasswordArgs) error {
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(args.CurrentPassword))
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "UpdatePassword",
+			"subFunc": "bcrypt.CompareHashAndPassword",
+			"userID":  user.ID,
+		}).Error(err)
+		return err
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(args.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "UpdatePassword",
+			"subFunc": "bcrypt.GenerateFromPassword",
+			"userID":  user.ID,
+		}).Error(err)
+		return err
+	}
+
+	user.Password = string(hashedPassword)
+	err = user.Save(db)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "UpdatePassword",
+			"subFunc": "user.Save",
+			"userID":  user.ID,
+		}).Error(err)
+		return err
+	}
+
+	return nil
 }
