@@ -29,9 +29,10 @@ func (user *User) Save(db *gorm.DB) error {
 
 // UserProfile describes users profile
 type UserProfile struct {
-	ID    int    `json:"id" gorm:"primary_key"`
-	Email string `json:"email" gorm:"unique;not null"`
-	Name  string `json:"name"`
+	ID         int     `json:"id"`
+	Email      string  `json:"email"`
+	Name       string  `json:"name"`
+	ProfilePic *string `json:"profilePic"`
 }
 
 type SignUpArgs struct {
@@ -65,9 +66,10 @@ type UpdatePasswordArgs struct {
 // GetProfile organises user data and returns it
 func (user *User) GetProfile() (*UserProfile, error) {
 	return &UserProfile{
-		ID:    user.ID,
-		Email: user.Email,
-		Name:  user.Name,
+		ID:         user.ID,
+		Email:      user.Email,
+		Name:       user.Name,
+		ProfilePic: user.ProfilePic,
 	}, nil
 }
 
