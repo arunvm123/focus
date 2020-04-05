@@ -54,8 +54,8 @@ type LoginWithGoogleArgs struct {
 
 type UpdateProfileArgs struct {
 	// Email    *string `json:"email,omitempty"`
-	Name     *string `json:"name,omitempty"`
-	Password *string `json:"password,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	ProfilePic *string `json:"profilePic,omitempty"`
 }
 
 type UpdatePasswordArgs struct {
@@ -77,18 +77,8 @@ func (user *User) UpdateProfile(db *gorm.DB, args UpdateProfileArgs) error {
 	if args.Name != nil {
 		user.Name = *args.Name
 	}
-	if args.Password != nil {
-		passwordHash, err := bcrypt.GenerateFromPassword([]byte(*args.Password), bcrypt.DefaultCost)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"func":    "UpdateProfile",
-				"subFunc": "bcrypt.GenerateFromPassword",
-				"userID":  user.ID,
-			}).Error(err)
-			return err
-		}
-
-		user.Password = string(passwordHash)
+	if args.ProfilePic != nil {
+		user.ProfilePic = args.ProfilePic
 	}
 
 	err := user.Save(db)
