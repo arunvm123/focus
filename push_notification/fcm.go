@@ -7,10 +7,38 @@ import (
 	"firebase.google.com/go/messaging"
 )
 
-func SendPushNotification(client *messaging.Client, registrationTokens []string, message string) error {
+type Payload struct {
+	Title string            `json:"title"`
+	Body  string            `json:"body"`
+	Data  map[string]string `json:"data"`
+}
+
+func SendPushNotification(client *messaging.Client, registrationTokens []string, payload *Payload) error {
 	notification := &messaging.MulticastMessage{
-		Data: map[string]string{
-			"info": message,
+		Notification: &messaging.Notification{
+			Title:    payload.Title,
+			Body:     payload.Body,
+			ImageURL: "https://i.imgur.com/mGOXXII.png",
+		},
+		Data: payload.Data,
+		Webpush: &messaging.WebpushConfig{
+			Data: payload.Data,
+			Notification: &messaging.WebpushNotification{
+				Title:   payload.Title,
+				Body:    payload.Body,
+				Icon:    "https://i.imgur.com/mGOXXII.png",
+				Vibrate: []int{200, 100, 200},
+			},
+		},
+		Android: &messaging.AndroidConfig{
+			Notification: &messaging.AndroidNotification{
+				Color:                 "#4C51BF",
+				ClickAction:           "https://www.travail.in/",
+				DefaultSound:          true,
+				DefaultVibrateTimings: true,
+				DefaultLightSettings:  true,
+			},
+			Data: payload.Data,
 		},
 		Tokens: registrationTokens,
 	}

@@ -10,7 +10,7 @@ import (
 func (server *server) startCronJobs() error {
 	c := cron.New()
 
-	_, err := c.AddFunc("@every 5m", server.notificationForTasksAboutToExpire)
+	_, err := c.AddFunc("@every 30s", server.notificationForTasksAboutToExpire)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":     "startCronJobs",

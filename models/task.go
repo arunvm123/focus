@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"firebase.google.com/go/messaging"
+	"github.com/arunvm/travail-backend/config"
 	push "github.com/arunvm/travail-backend/push_notification"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
@@ -51,6 +52,12 @@ type UpdateTaskArgs struct {
 	Complete  *bool   `json:"complete"`
 	Archived  *bool   `json:"archived"`
 	ExpiresAt *int64  `json:"expiresAt"`
+}
+
+type TaskInfo struct {
+	Task
+	UserID int `json:"userID"`
+	ListID int `json:"listID"`
 }
 
 func (user *User) CreateTasks(db *gorm.DB, args *[]CreateTaskArgs) error {
@@ -266,44 +273,65 @@ func SendPushNotificationForTasksAboutToExpire(db *gorm.DB, pushClient *messagin
 	startTime := time.Now().Unix()
 	endTime := startTime + (5 * 60)
 
-	var userIDs []int
+	var tasks []TaskInfo
 	err := db.Table("tasks").Joins("JOIN lists on tasks.list_id = lists.id").
+		Select("tasks.*,lists.id as list_id,lists.user_id").
 		Where("expires_at BETWEEN ? AND ? AND tasks.archived = false AND lists.archived = false", startTime, endTime).
-		Pluck("DISTINCT(user_id)", &userIDs).Error
+		Find(&tasks).Error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func": "SendPushNotificationForTasksAboutToExpire",
-			"info": "retrieving users who have tasks expiring within the next 5 mins",
+			"info": "retrieving tasks expiring within the next 5 mins",
 		}).Error(err)
 		return err
 	}
 
-	if len(userIDs) == 0 {
+	if len(tasks) == 0 {
 		return nil
 	}
 
-	var deviceTokens []string
-	err = db.Table("fcm_notification_tokens").Where("user_id IN (?)", userIDs).
-		Pluck("token", &deviceTokens).Error
-	if err != nil {
-		log.WithFields(log.Fields{
-			"func": "SendPushNotificationForTasksAboutToExpire",
-			"info": "retrieving users device tokens",
-		}).Error(err)
-		return err
-	}
-
-	if len(deviceTokens) == 0 {
-		return nil
-	}
-
-	err = push.SendPushNotification(pushClient, deviceTokens, "You have tasks that are about to expire")
+	config, err := config.GetConfig()
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "SendPushNotificationForTasksAboutToExpire",
-			"subFunc": "push.SendPushNotification",
+			"subFunc": "config.GetConfig",
 		}).Error(err)
 		return err
+	}
+
+	for i := 0; i < len(tasks); i++ {
+		go func(i int) {
+			var deviceTokens []string
+			err = db.Table("fcm_notification_tokens").Where("user_id = ?", tasks[i].UserID).
+				Pluck("token", &deviceTokens).Error
+			if err != nil {
+				log.WithFields(log.Fields{
+					"func": "SendPushNotificationForTasksAboutToExpire",
+					"info": "retrieving users device tokens",
+				}).Error(err)
+				return
+			}
+
+			if len(deviceTokens) == 0 {
+				return
+			}
+
+			err = push.SendPushNotification(pushClient, deviceTokens, &push.Payload{
+				Body:  tasks[i].Info,
+				Title: "Travail Reminder",
+				Data: map[string]string{
+					"link": config.DomainURL,
+				},
+			})
+			if err != nil {
+				log.WithFields(log.Fields{
+					"func":    "SendPushNotificationForTasksAboutToExpire",
+					"subFunc": "push.SendPushNotification",
+				}).Error(err)
+				return
+			}
+
+		}(i)
 	}
 
 	return nil
