@@ -7,7 +7,7 @@ import (
 	"firebase.google.com/go/messaging"
 )
 
-func sendPushNotification(client messaging.Client, registrationTokens []string, message string) error {
+func SendPushNotification(client *messaging.Client, registrationTokens []string, message string) error {
 	notification := &messaging.MulticastMessage{
 		Data: map[string]string{
 			"info": message,

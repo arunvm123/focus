@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"firebase.google.com/go/messaging"
+	push "github.com/arunvm/travail-backend/push_notification"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
@@ -258,4 +260,51 @@ func getTaskOfUser(db *gorm.DB, userID int, taskID int) (*Task, error) {
 	}
 
 	return &task, nil
+}
+
+func SendPushNotificationForTasksAboutToExpire(db *gorm.DB, pushClient *messaging.Client) error {
+	startTime := time.Now().Unix()
+	endTime := startTime + (5 * 60)
+
+	var userIDs []int
+	err := db.Table("tasks").Joins("JOIN lists on tasks.list_id = lists.id").
+		Where("expires_at BETWEEN ? AND ? AND tasks.archived = false AND lists.archived = false", startTime, endTime).
+		Pluck("DISTINCT(user_id)", &userIDs).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func": "SendPushNotificationForTasksAboutToExpire",
+			"info": "retrieving users who have tasks expiring within the next 5 mins",
+		}).Error(err)
+		return err
+	}
+
+	if len(userIDs) == 0 {
+		return nil
+	}
+
+	var deviceTokens []string
+	err = db.Table("fcm_notification_tokens").Where("user_id IN (?)", userIDs).
+		Pluck("token", &deviceTokens).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func": "SendPushNotificationForTasksAboutToExpire",
+			"info": "retrieving users device tokens",
+		}).Error(err)
+		return err
+	}
+
+	if len(deviceTokens) == 0 {
+		return nil
+	}
+
+	err = push.SendPushNotification(pushClient, deviceTokens, "You have tasks that are about to expire")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "SendPushNotificationForTasksAboutToExpire",
+			"subFunc": "push.SendPushNotification",
+		}).Error(err)
+		return err
+	}
+
+	return nil
 }

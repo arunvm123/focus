@@ -9,6 +9,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/ilyakaznacheev/cleanenv v1.2.1
 	github.com/jinzhu/gorm v1.9.12
+	github.com/robfig/cron/v3 v3.0.0
 	github.com/rs/cors v1.7.0
 	github.com/rs/xid v1.2.1
 	github.com/sendgrid/rest v2.4.1+incompatible // indirect

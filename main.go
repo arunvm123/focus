@@ -67,6 +67,11 @@ func main() {
 		log.Fatalf("error when initialising FCM push notification client\n%v", err)
 	}
 
+	err = server.startCronJobs()
+	if err != nil {
+		log.Fatalf("error starting cron jobs\n%v", err)
+	}
+
 	// Setting up routes
 	server.routes = initialiseRoutes(server)
 	routes := cors.AllowAll().Handler(server.routes)
