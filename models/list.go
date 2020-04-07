@@ -5,12 +5,13 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
+	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
 
 // List model
 type List struct {
-	ID        int    `json:"id" gorm:"primary_key"`
+	ID        string `json:"id" gorm:"primary_key"`
 	UserID    int    `json:"userId"`
 	Heading   string `json:"heading"`
 	CreatedAt int64  `json:"createdAt"`
@@ -40,29 +41,30 @@ type CreateListArgs struct {
 
 // UpdateListArgs defines the args for update list api
 type UpdateListArgs struct {
-	ID       int     `json:"id" binding:"required"`
+	ID       string  `json:"id" binding:"required"`
 	Heading  *string `json:"heading,omitempty"`
 	Archived *bool   `json:"archived,omitempty"`
 }
 
-func getListOfUser(db *gorm.DB, userID int) (*List, error) {
-	var list List
+// func getListOfUser(db *gorm.DB, userID int) (*List, error) {
+// 	var list List
 
-	err := db.Find(&list, "user_id = ? AND archived = false", userID).Error
-	if err != nil {
-		log.WithFields(log.Fields{
-			"func":   "getListOfUser",
-			"info":   "retrieving all lists of user",
-			"userID": userID,
-		}).Error(err)
-		return nil, err
-	}
+// 	err := db.Find(&list, "user_id = ? AND archived = false", userID).Error
+// 	if err != nil {
+// 		log.WithFields(log.Fields{
+// 			"func":   "getListOfUser",
+// 			"info":   "retrieving all lists of user",
+// 			"userID": userID,
+// 		}).Error(err)
+// 		return nil, err
+// 	}
 
-	return &list, nil
-}
+// 	return &list, nil
+// }
 
 func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) (*List, error) {
 	list := List{
+		ID:        uuid.NewV4().String(),
 		UserID:    user.ID,
 		Archived:  false,
 		CreatedAt: time.Now().Unix(),
@@ -139,7 +141,7 @@ func (user *User) UpdateList(db *gorm.DB, args *UpdateListArgs) error {
 	return nil
 }
 
-func getList(db *gorm.DB, listID int) (*List, error) {
+func getList(db *gorm.DB, listID string) (*List, error) {
 	var list List
 
 	err := db.Find(&list, "archived = false AND id = ?", listID).Error

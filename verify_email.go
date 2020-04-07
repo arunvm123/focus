@@ -17,7 +17,7 @@ func (server *server) verifyEmail(c *gin.Context) {
 			"func": "verifyEmail",
 			"info": "error decoding request body",
 		}).Error(err)
-		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
+		c.JSON(http.StatusBadRequest, "Request body not properly formatted")
 		return
 	}
 

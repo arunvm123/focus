@@ -21,7 +21,7 @@ func (server *server) forgotPassword(c *gin.Context) {
 			"func":    "forgotPassword",
 			"subFunc": "c.ShouldBindJSON",
 		}).Error(err)
-		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
+		c.JSON(http.StatusBadRequest, "Request body not properly formatted")
 		return
 	}
 

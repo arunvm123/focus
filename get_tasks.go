@@ -28,7 +28,7 @@ func (server *server) getTasks(c *gin.Context) {
 			"info":   "Error when decoding request body",
 			"userID": user.ID,
 		}).Error(err)
-		c.JSON(http.StatusInternalServerError, "Request body not properly formatted")
+		c.JSON(http.StatusBadRequest, "Request body not properly formatted")
 		return
 	}
 

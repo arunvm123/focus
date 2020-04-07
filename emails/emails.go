@@ -31,6 +31,7 @@ func SendValidationEmail(emailClient *sendgrid.Client, user *models.User, token 
 	}
 
 	return sendEmail(emailClient, to, map[string]interface{}{
+		"name":            user.Name,
 		"validation_link": c.DomainURL + "verify/module?token=" + token,
 	}, emailValidation)
 }

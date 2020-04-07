@@ -15,7 +15,7 @@ func (server *server) createList(c *gin.Context) {
 			"func":    "createList",
 			"subFunc": "getUserFromContext",
 		}).Error(err)
-		c.JSON(http.StatusInternalServerError, err)
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
@@ -44,7 +44,7 @@ func (server *server) createList(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, struct {
-		ID int `json:"id"`
+		ID string `json:"id"`
 	}{
 		ID: list.ID,
 	})
