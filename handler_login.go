@@ -29,7 +29,7 @@ func (server *server) login(c *gin.Context) {
 	user, err := models.GetUserFromEmail(server.db, loginData.Email)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusOK, "User does not exist, Please sign up")
+			c.JSON(http.StatusUnauthorized, "User does not exist, Please sign up")
 			return
 		}
 		log.WithFields(log.Fields{
