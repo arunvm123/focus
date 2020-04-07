@@ -8,13 +8,14 @@ import (
 	"github.com/arunvm/travail-backend/config"
 	push "github.com/arunvm/travail-backend/push_notification"
 	"github.com/jinzhu/gorm"
+	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
 
 // Task model
 type Task struct {
-	ID        int    `json:"id" gorm:"primary_key"`
-	ListID    int    `json:"listID"`
+	ID        string `json:"id" gorm:"primary_key"`
+	ListID    string `json:"listID"`
 	Info      string `json:"info"`
 	CreatedAt int64  `json:"createdAt"`
 	UpdatedAt *int64 `json:"updatedAt"`
@@ -35,18 +36,18 @@ func (t *Task) Save(db *gorm.DB) error {
 }
 
 type CreateTaskArgs struct {
-	ListID    int    `json:"listID" binding:"required"`
+	ListID    string `json:"listID" binding:"required"`
 	Info      string `json:"info"`
 	Order     int    `json:"order"`
 	ExpiresAt *int64 `json:"expiresAt"`
 }
 
 type GetTasksArgs struct {
-	ListID int `json:"listID" binding:"required"`
+	ListID string `json:"listID" binding:"required"`
 }
 
 type UpdateTaskArgs struct {
-	ID        int     `json:"id" binding:"required"`
+	ID        string  `json:"id" binding:"required"`
 	Info      *string `json:"info"`
 	Order     *int    `json:"order"`
 	Complete  *bool   `json:"complete"`
@@ -60,56 +61,56 @@ type TaskInfo struct {
 	ListID int `json:"listID"`
 }
 
-func (user *User) CreateTasks(db *gorm.DB, args *[]CreateTaskArgs) error {
-	list, err := getListOfUser(db, user.ID)
-	if err != nil {
-		if err != gorm.ErrRecordNotFound {
-			log.Printf("Error when fetching users list\n%v", err)
-			return err
-		}
-	}
+// func (user *User) CreateTasks(db *gorm.DB, args *[]CreateTaskArgs) error {
+// 	list, err := getListOfUser(db, user.ID)
+// 	if err != nil {
+// 		if err != gorm.ErrRecordNotFound {
+// 			log.Printf("Error when fetching users list\n%v", err)
+// 			return err
+// 		}
+// 	}
 
-	tx := db.Begin()
-	if list == nil {
-		list = &List{
-			UserID:    user.ID,
-			Archived:  false,
-			CreatedAt: time.Now().Unix(),
-			Heading:   "Default List",
-		}
+// 	tx := db.Begin()
+// 	if list == nil {
+// 		list = &List{
+// 			UserID:    user.ID,
+// 			Archived:  false,
+// 			CreatedAt: time.Now().Unix(),
+// 			Heading:   "Default List",
+// 		}
 
-		err = list.Create(tx)
-		if err != nil {
-			tx.Rollback()
-			log.Printf("Error when creating list\n%v", err)
-			return err
-		}
-	}
+// 		err = list.Create(tx)
+// 		if err != nil {
+// 			tx.Rollback()
+// 			log.Printf("Error when creating list\n%v", err)
+// 			return err
+// 		}
+// 	}
 
-	var tasks []Task
-	for i := range *args {
-		task := Task{
-			ListID:    list.ID,
-			Archived:  false,
-			Complete:  false,
-			Info:      (*args)[i].Info,
-			Order:     (*args)[i].Order,
-			CreatedAt: time.Now().Unix(),
-		}
+// 	var tasks []Task
+// 	for i := range *args {
+// 		task := Task{
+// 			ListID:    list.ID,
+// 			Archived:  false,
+// 			Complete:  false,
+// 			Info:      (*args)[i].Info,
+// 			Order:     (*args)[i].Order,
+// 			CreatedAt: time.Now().Unix(),
+// 		}
 
-		tasks = append(tasks, task)
-	}
+// 		tasks = append(tasks, task)
+// 	}
 
-	err = createTasks(tx, &tasks)
-	if err != nil {
-		tx.Rollback()
-		log.Printf("Error when creating tasks\n%v", err)
-		return err
-	}
+// 	err = createTasks(tx, &tasks)
+// 	if err != nil {
+// 		tx.Rollback()
+// 		log.Printf("Error when creating tasks\n%v", err)
+// 		return err
+// 	}
 
-	tx.Commit()
-	return nil
-}
+// 	tx.Commit()
+// 	return nil
+// }
 
 func (user *User) CreateTask(db *gorm.DB, args *CreateTaskArgs) (*Task, error) {
 	list, err := getList(db, args.ListID)
@@ -133,6 +134,7 @@ func (user *User) CreateTask(db *gorm.DB, args *CreateTaskArgs) (*Task, error) {
 
 	tx := db.Begin()
 
+	task.ID = uuid.NewV4().String()
 	task.Info = args.Info
 	task.Order = args.Order
 	task.ExpiresAt = args.ExpiresAt
@@ -222,35 +224,35 @@ func (user *User) UpdateTask(db *gorm.DB, args UpdateTaskArgs) error {
 	return nil
 }
 
-func createTasks(db *gorm.DB, tasks *[]Task) error {
-	if len(*tasks) == 0 {
-		return nil
-	}
-	sqlQuery := "INSERT into tasks(list_id,info,created_at,complete,`order`,archived) VALUES "
+// func createTasks(db *gorm.DB, tasks *[]Task) error {
+// 	if len(*tasks) == 0 {
+// 		return nil
+// 	}
+// 	sqlQuery := "INSERT into tasks(list_id,info,created_at,complete,`order`,archived) VALUES "
 
-	scope := db.NewScope(Task{})
-	for i := 0; i < len(*tasks); i++ {
-		sqlQuery = sqlQuery + "(?,?,?,?,?,?),"
-		scope.AddToVars((*tasks)[i].ListID)
-		scope.AddToVars((*tasks)[i].Info)
-		scope.AddToVars((*tasks)[i].CreatedAt)
-		scope.AddToVars((*tasks)[i].Complete)
-		scope.AddToVars((*tasks)[i].Order)
-		scope.AddToVars((*tasks)[i].Archived)
-	}
+// 	scope := db.NewScope(Task{})
+// 	for i := 0; i < len(*tasks); i++ {
+// 		sqlQuery = sqlQuery + "(?,?,?,?,?,?),"
+// 		scope.AddToVars((*tasks)[i].ListID)
+// 		scope.AddToVars((*tasks)[i].Info)
+// 		scope.AddToVars((*tasks)[i].CreatedAt)
+// 		scope.AddToVars((*tasks)[i].Complete)
+// 		scope.AddToVars((*tasks)[i].Order)
+// 		scope.AddToVars((*tasks)[i].Archived)
+// 	}
 
-	sqlQuery = sqlQuery[:len(sqlQuery)-1]
+// 	sqlQuery = sqlQuery[:len(sqlQuery)-1]
 
-	err := db.Exec(sqlQuery, scope.SQLVars...).Error
-	if err != nil {
-		log.Println("Error when creating tasks")
-		return err
-	}
+// 	err := db.Exec(sqlQuery, scope.SQLVars...).Error
+// 	if err != nil {
+// 		log.Println("Error when creating tasks")
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-func getTaskOfUser(db *gorm.DB, userID int, taskID int) (*Task, error) {
+func getTaskOfUser(db *gorm.DB, userID int, taskID string) (*Task, error) {
 	var task Task
 
 	err := db.Table("lists").Joins("JOIN tasks on tasks.list_id = lists.id").
