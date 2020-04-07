@@ -8,9 +8,10 @@ import (
 )
 
 type Payload struct {
-	Title string            `json:"title"`
-	Body  string            `json:"body"`
-	Data  map[string]string `json:"data"`
+	Title       string            `json:"title"`
+	Body        string            `json:"body"`
+	Data        map[string]string `json:"data"`
+	ClickAction string            `json:"clickAction"`
 }
 
 func SendPushNotification(client *messaging.Client, registrationTokens []string, payload *Payload) error {
@@ -33,7 +34,7 @@ func SendPushNotification(client *messaging.Client, registrationTokens []string,
 		Android: &messaging.AndroidConfig{
 			Notification: &messaging.AndroidNotification{
 				Color:                 "#4C51BF",
-				ClickAction:           "https://www.travail.in/",
+				ClickAction:           payload.ClickAction,
 				DefaultSound:          true,
 				DefaultVibrateTimings: true,
 				DefaultLightSettings:  true,
