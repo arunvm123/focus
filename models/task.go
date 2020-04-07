@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"firebase.google.com/go/messaging"
-	"github.com/arunvm/travail-backend/config"
 	push "github.com/arunvm/travail-backend/push_notification"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
@@ -292,15 +291,6 @@ func SendPushNotificationForTasksAboutToExpire(db *gorm.DB, pushClient *messagin
 		return nil
 	}
 
-	config, err := config.GetConfig()
-	if err != nil {
-		log.WithFields(log.Fields{
-			"func":    "SendPushNotificationForTasksAboutToExpire",
-			"subFunc": "config.GetConfig",
-		}).Error(err)
-		return err
-	}
-
 	for i := 0; i < len(tasks); i++ {
 		go func(i int) {
 			var deviceTokens []string
@@ -319,12 +309,12 @@ func SendPushNotificationForTasksAboutToExpire(db *gorm.DB, pushClient *messagin
 			}
 
 			err = push.SendPushNotification(pushClient, deviceTokens, &push.Payload{
-				Body:  tasks[i].Info,
+				Body:  "'" + tasks[i].Info + "' is due soon",
 				Title: tasks[i].Heading,
 				Data: map[string]string{
-					"link": config.DomainURL + "/todo/id?=" + tasks[i].ListID,
+					"link": "/todo/id?=" + tasks[i].ListID,
 				},
-				ClickAction: config.DomainURL + "/todo/id?=" + tasks[i].ListID,
+				ClickAction: "/todo/id?=" + tasks[i].ListID,
 			})
 			if err != nil {
 				log.WithFields(log.Fields{
