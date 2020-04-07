@@ -59,7 +59,6 @@ type TaskInfo struct {
 	Task
 	Heading string `json:"heading"`
 	UserID  int    `json:"userID"`
-	ListID  int    `json:"listID"`
 }
 
 // func (user *User) CreateTasks(db *gorm.DB, args *[]CreateTaskArgs) error {
@@ -278,7 +277,7 @@ func SendPushNotificationForTasksAboutToExpire(db *gorm.DB, pushClient *messagin
 
 	var tasks []TaskInfo
 	err := db.Table("tasks").Joins("JOIN lists on tasks.list_id = lists.id").
-		Select("tasks.*,lists.id as list_id,lists.user_id,lists.heading").
+		Select("tasks.*,lists.user_id,lists.heading").
 		Where("expires_at BETWEEN ? AND ? AND tasks.archived = false AND lists.archived = false", startTime, endTime).
 		Find(&tasks).Error
 	if err != nil {
@@ -323,9 +322,9 @@ func SendPushNotificationForTasksAboutToExpire(db *gorm.DB, pushClient *messagin
 				Body:  tasks[i].Info,
 				Title: tasks[i].Heading,
 				Data: map[string]string{
-					"link": config.DomainURL + "/todo/title?=" + tasks[i].Heading,
+					"link": config.DomainURL + "/todo/id?=" + tasks[i].ListID,
 				},
-				ClickAction: config.DomainURL + "/todo/title?=" + tasks[i].Heading,
+				ClickAction: config.DomainURL + "/todo/id?=" + tasks[i].ListID,
 			})
 			if err != nil {
 				log.WithFields(log.Fields{
