@@ -40,6 +40,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 
 	private.POST("/create/bug", server.createBug)
 	admin.GET("/get/bugs", server.getBugs)
+	admin.POST("/update/bug", server.updateBug)
 
 	return r
 }
