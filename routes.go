@@ -39,6 +39,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 	admin.Use(server.CheckIfAdminMiddleware())
 
 	private.POST("/create/bug", server.createBug)
+	admin.GET("/admin/check", server.adminCheck)
 	admin.GET("/get/bugs", server.getBugs)
 	admin.POST("/update/bug", server.updateBug)
 
