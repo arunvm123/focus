@@ -14,6 +14,8 @@ func MigrateDB(db *gorm.DB) {
 	db.AutoMigrate(&List{})
 	db.AutoMigrate(&Task{})
 
+	db.AutoMigrate(Bug{})
+
 	err := db.Model(List{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT").Error
 	if err != nil {
 		log.Fatalf("Error adding foreign key for list model\n%v", err)
@@ -24,7 +26,7 @@ func MigrateDB(db *gorm.DB) {
 	}
 	err = db.Model(EmailValidateToken{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT").Error
 	if err != nil {
-		log.Fatalf("Error adding foreign key for email_validate_token  model\n%v", err)
+		log.Fatalf("Error adding foreign key for email_validate_token model\n%v", err)
 	}
 	err = db.Model(FCMNotificationToken{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT").Error
 	if err != nil {
@@ -32,6 +34,10 @@ func MigrateDB(db *gorm.DB) {
 	}
 	err = db.Model(ForgotPasswordToken{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT").Error
 	if err != nil {
-		log.Fatalf("Error adding foreign key for forgot_password_token  model\n%v", err)
+		log.Fatalf("Error adding foreign key for forgot_password_token model\n%v", err)
+	}
+	err = db.Model(Bug{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT").Error
+	if err != nil {
+		log.Fatalf("Error adding foreign key for bug model\n%v", err)
 	}
 }

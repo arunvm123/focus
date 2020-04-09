@@ -36,6 +36,57 @@ func (server *server) tokenAuthorisationMiddleware() gin.HandlerFunc {
 	}
 }
 
+func (server *server) CheckIfAdminMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := c.Request.Header.Get("Authorization")
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, "Provide token")
+			c.Abort()
+			return
+		}
+
+		user, err := server.getUserFromToken(token)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"func":    "CheckIfAdminMiddleware",
+				"subFunc": "server.getUserFromToken",
+			}).Error(err)
+			c.JSON(http.StatusUnauthorized, "Invalid user")
+			c.Abort()
+			return
+		}
+
+		confguration, err := config.GetConfig()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"func":    "CheckIfAdminMiddleware",
+				"subFunc": "config.GetConfig",
+			}).Error(err)
+			c.JSON(http.StatusInternalServerError, "Error reading config file")
+			c.Abort()
+			return
+		}
+
+		var flag bool
+		for i := 0; i < len(confguration.AdminIDs); i++ {
+			if user.ID == confguration.AdminIDs[i] {
+				flag = true
+				break
+			}
+		}
+
+		if flag == false {
+			c.JSON(http.StatusUnauthorized, "User not admin")
+			c.Abort()
+			return
+		}
+
+		c.Keys = make(map[string]interface{})
+		c.Keys["user"] = user
+		c.Next()
+	}
+}
+
 func (server *server) getUserFromToken(token string) (*models.User, error) {
 	config, err := config.GetConfig()
 	if err != nil {

@@ -35,5 +35,11 @@ func initialiseRoutes(server *server) *gin.Engine {
 	private.POST("/add/notification/token", server.addNotificationToken)
 	// private.GET("/get/notification/tokens", server.getNotificationTokens)
 
+	admin := r.Group("/")
+	admin.Use(server.CheckIfAdminMiddleware())
+
+	private.POST("/create/bug", server.createBug)
+	admin.GET("/get/bugs", server.getBugs)
+
 	return r
 }

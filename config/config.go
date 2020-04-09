@@ -15,6 +15,7 @@ type config struct {
 	JWTSecret                string         `yaml:"jwt_secret"`
 	SendgridKey              string         `yaml:"sendgrid_key"`
 	FCMServiceAccountKeyPath string         `yaml:"fcm_service_account_key_path"`
+	AdminIDs                 []int          `yaml:"admin_ids"`
 }
 
 type databaseConfig struct {
