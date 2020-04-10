@@ -43,7 +43,7 @@ type BugInfo struct {
 
 type UpdateBugArgs struct {
 	ID     int `json:"id" binding:"required"`
-	Status int `json:"status" binding:"required,eq=2|eq=3"`
+	Status int `json:"status" binding:"required,eq=2|eq=3|eq=1"`
 }
 
 func (user *User) CreateBug(db *gorm.DB, args *CreateBugArgs) error {
