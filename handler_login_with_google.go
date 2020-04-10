@@ -108,17 +108,19 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 	c.SetCookie("Authorization", signedToken, 0, "", "travail.in", false, false)
 
 	c.JSON(http.StatusOK, struct {
-		Token      string  `json:"token"`
-		Name       string  `json:"name"`
-		ID         int     `json:"id"`
-		Email      string  `json:"email"`
-		ProfilePic *string `json:"profilePic"`
+		Token       string  `json:"token"`
+		Name        string  `json:"name"`
+		ID          int     `json:"id"`
+		Email       string  `json:"email"`
+		ProfilePic  *string `json:"profilePic"`
+		GoogleOauth bool    `json:"googleOauth"`
 	}{
-		Token:      signedToken,
-		Email:      user.Email,
-		ID:         user.ID,
-		Name:       user.Name,
-		ProfilePic: user.ProfilePic,
+		Token:       signedToken,
+		Email:       user.Email,
+		ID:          user.ID,
+		Name:        user.Name,
+		ProfilePic:  user.ProfilePic,
+		GoogleOauth: user.GoogleOauth,
 	})
 	return
 }
