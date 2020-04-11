@@ -18,8 +18,8 @@ require (
 	github.com/sirupsen/logrus v1.5.0
 	go.opencensus.io v0.22.3 // indirect
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
+	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
-	golang.org/x/tools v0.0.0-20200406213809-066fd1390ee0
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20200326112834-f447254575fd // indirect
 	google.golang.org/grpc v1.28.0 // indirect

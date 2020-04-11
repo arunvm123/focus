@@ -60,6 +60,10 @@ type TaskInfo struct {
 	UserID  int    `json:"userID"`
 }
 
+type DeleteTasksArgs struct {
+	TaskIDs []string `json:"taskIDs" binding:"required"`
+}
+
 // func (user *User) CreateTasks(db *gorm.DB, args *[]CreateTaskArgs) error {
 // 	list, err := getListOfUser(db, user.ID)
 // 	if err != nil {
@@ -216,6 +220,24 @@ func (user *User) UpdateTask(db *gorm.DB, args UpdateTaskArgs) error {
 			"subFunc": "task.Save",
 			"userID":  user.ID,
 			"taskID":  args.ID,
+		}).Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (user *User) DeleteTasks(db *gorm.DB, args *DeleteTasksArgs) error {
+	err := db.Table("tasks JOIN lists on tasks.list_id = lists.id").
+		Where("user_id = ? AND tasks.id IN (?)", user.ID, args.TaskIDs).
+		UpdateColumn("tasks.archived", true).
+		Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":   "DeleteTasks",
+			"info":   "deleting tasks specified by id",
+			"userID": user.ID,
+			"args":   *args,
 		}).Error(err)
 		return err
 	}
