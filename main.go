@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"net/http"
 
 	firebase "firebase.google.com/go"
@@ -38,8 +39,12 @@ func main() {
 	// Logging options
 	log.SetFormatter(&log.JSONFormatter{})
 
+	// Reading file path from flag
+	filePath := flag.String("config-path", "config.yaml", "filepath to configuration file")
+	flag.Parse()
+
 	// Reading config variables
-	config, err := config.GetConfig()
+	config, err := config.Initialise(*filePath)
 	if err != nil {
 		log.Fatalf("Failed to read config\n%v", err)
 	}

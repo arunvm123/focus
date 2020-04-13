@@ -1,12 +1,9 @@
 package config
 
 import (
-	"sync"
-
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
-var once sync.Once
 var configuration config
 
 type config struct {
@@ -27,16 +24,17 @@ type databaseConfig struct {
 	Port         string `json:"port"`
 }
 
-// GetConfig looks for config.yaml in the current directory and reads
-// into the config struct
-func GetConfig() (*config, error) {
-	var err error
-	once.Do(func() {
-		err = cleanenv.ReadConfig("config.yaml", &configuration)
-	})
+func Initialise(filepath string) (*config, error) {
+	err := cleanenv.ReadConfig(filepath, &configuration)
 	if err != nil {
 		return nil, err
 	}
 
+	return &configuration, nil
+}
+
+// GetConfig looks for config.yaml in the current directory and reads
+// into the config struct
+func GetConfig() (*config, error) {
 	return &configuration, nil
 }
