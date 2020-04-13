@@ -76,5 +76,5 @@ func main() {
 	server.routes = initialiseRoutes(server)
 	routes := cors.AllowAll().Handler(server.routes)
 
-	http.ListenAndServeTLS(":5000", "./certs/fullchain.pem", "./certs/privkey.pem", routes)
+	http.ListenAndServeTLS(":"+config.Port, "./certs/fullchain.pem", "./certs/privkey.pem", routes)
 }

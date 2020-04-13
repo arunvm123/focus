@@ -10,6 +10,7 @@ var once sync.Once
 var configuration config
 
 type config struct {
+	Port                     string         `yaml:"port"`
 	DomainURL                string         `yaml:"domain_url"`
 	Database                 databaseConfig `yaml:"database"`
 	JWTSecret                string         `yaml:"jwt_secret"`

@@ -1,3 +1,4 @@
+port: "<PORT"
 domain_url: "<DOMAIN_URL>"
 database:
   host: "<HOST>"
