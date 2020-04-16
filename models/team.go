@@ -1,6 +1,12 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import (
+	"time"
+
+	"github.com/jinzhu/gorm"
+	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
+)
 
 type Team struct {
 	ID             string  `json:"id" gorm:"primary_key;auto_increment:false"`
@@ -20,4 +26,27 @@ func (team *Team) Create(db *gorm.DB) error {
 // Save is a helper function to update existing organisation
 func (team *Team) Save(db *gorm.DB) error {
 	return db.Save(&team).Error
+}
+
+func (user *User) createPersonalTeam(db *gorm.DB, org *Organisation) error {
+	team := Team{
+		ID:             uuid.NewV4().String(),
+		AdminID:        user.ID,
+		Archived:       false,
+		CreatedAt:      time.Now().Unix(),
+		Name:           personalString,
+		OrganisationID: org.ID,
+	}
+
+	err := team.Create(db)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "createPersonalTeam",
+			"subFunc": "team.Create",
+			"userID":  user.ID,
+		}).Error(err)
+		return err
+	}
+
+	return nil
 }
