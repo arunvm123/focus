@@ -27,7 +27,7 @@ func (server *server) signup(c *gin.Context) {
 	}
 
 	tx := server.db.Begin()
-	user, err := models.UserSignup(tx, &args)
+	user, err := models.UserSignup(tx, &args, false)
 	if err != nil {
 		tx.Rollback()
 		log.WithFields(log.Fields{

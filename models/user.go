@@ -147,54 +147,34 @@ func CheckIfUserExists(db *gorm.DB, email string) bool {
 	return false
 }
 
-func UserSignup(db *gorm.DB, args *SignUpArgs) (*User, error) {
+func UserSignup(db *gorm.DB, args *SignUpArgs, googleOauth bool) (*User, error) {
 	var user User
+
+	if !googleOauth {
+		passwordHash, err := bcrypt.GenerateFromPassword([]byte(args.Password), bcrypt.DefaultCost)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"func":    "UserSignup",
+				"subFunc": "bcrypt.GenerateFromPassword",
+				"email":   args.Email,
+			}).Error(err)
+			return nil, err
+		}
+		user.Password = string(passwordHash)
+	}
 
 	user.Email = args.Email
 	user.Name = args.Name
-
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(args.Password), bcrypt.DefaultCost)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"func":    "UserSignup",
-			"subFunc": "bcrypt.GenerateFromPassword",
-			"email":   args.Email,
-		}).Error(err)
-		return nil, err
-	}
-
-	user.Password = string(passwordHash)
 	user.Verified = false
-	user.GoogleOauth = false
-
-	err = user.Create(db)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"func":    "UserSignup",
-			"subFunc": "user.Create",
-			"email":   args.Email,
-		}).Error(err)
-		return nil, err
-	}
-
-	return &user, nil
-}
-
-func SignUpWithGoogle(db *gorm.DB, args *LoginWithGoogleArgs) (*User, error) {
-	var user User
-
-	user.Email = args.Email
-	user.Name = args.Name
-	user.ProfilePic = args.Picture
-	user.Verified = true
-	user.GoogleOauth = true
+	user.GoogleOauth = googleOauth
 
 	err := user.Create(db)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"func":    "SignUpWithGoogle",
-			"subFunc": "user.Create",
-			"email":   args.Email,
+			"func":        "UserSignup",
+			"subFunc":     "user.Create",
+			"email":       args.Email,
+			"googleOauth": googleOauth,
 		}).Error(err)
 		return nil, err
 	}

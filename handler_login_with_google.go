@@ -82,7 +82,10 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 			return
 		}
 	} else {
-		user, err = models.SignUpWithGoogle(server.db, &userInfo)
+		user, err = models.UserSignup(server.db, &models.SignUpArgs{
+			Email: userInfo.Email,
+			Name:  userInfo.Name,
+		}, true)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"func":    "loginWithGoogle",
