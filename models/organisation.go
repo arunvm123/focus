@@ -34,6 +34,46 @@ func (org *Organisation) Save(db *gorm.DB) error {
 	return db.Save(&org).Error
 }
 
+type CreateOrganisationArgs struct {
+	Name string `json:"name" binding:"required"`
+}
+
+func (user *User) CreateOrganisation(db *gorm.DB, args *CreateOrganisationArgs) error {
+	org := Organisation{
+		ID:        uuid.NewV4().String(),
+		AdminID:   user.ID,
+		Archived:  false,
+		CreatedAt: time.Now().Unix(),
+		Name:      args.Name,
+		Type:      organistation,
+	}
+
+	err := org.Create(db)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "CreateOrganisation",
+			"subFunc": "org.Create",
+			"userID":  user.ID,
+			"args":    *args,
+		}).Error(err)
+		return err
+	}
+
+	err = addUserToOrganisation(db, user.ID, org.ID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":           "CreateOrganisation",
+			"subFunc":        "addUserToOrganisation",
+			"userID":         user.ID,
+			"organisationID": org.ID,
+			"args":           *args,
+		}).Error(err)
+		return err
+	}
+
+	return nil
+}
+
 func (user *User) createPersonalOrganisation(db *gorm.DB) (*Organisation, error) {
 	org := Organisation{
 		ID:        uuid.NewV4().String(),
