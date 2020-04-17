@@ -23,9 +23,9 @@ func (server *server) createList(c *gin.Context) {
 	err = c.ShouldBindJSON(&args)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"func":   "createList",
-			"info":   "error decoding request body",
-			"userID": user.ID,
+			"func":    "createList",
+			"subFunc": "c.ShouldBindJSON",
+			"userID":  user.ID,
 		}).Error(err)
 		c.JSON(http.StatusBadRequest, "Request body not properly formatted")
 		return

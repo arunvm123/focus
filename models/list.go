@@ -41,6 +41,10 @@ type CreateListArgs struct {
 	Heading string `json:"heading"`
 }
 
+type GetListsArgs struct {
+	TeamID string `json:"teamID" binding:"required"`
+}
+
 // UpdateListArgs defines the args for update list api
 type UpdateListArgs struct {
 	ID       string  `json:"id" binding:"required"`
@@ -104,14 +108,29 @@ func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) (*List, error) {
 }
 
 // GetLists returns all lists of the user
-func (user *User) GetLists(db *gorm.DB) (*[]ListInfo, error) {
+func (user *User) GetLists(db *gorm.DB, args *GetListsArgs) (*[]ListInfo, error) {
 	var lists []ListInfo
 
-	err := db.Table("lists").Joins("LEFT JOIN tasks on lists.id = tasks.list_id").
+	team, err := getTeamFromID(db, args.TeamID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "GetLists",
+			"subFunc": "getTeamFromID",
+			"userID":  user.ID,
+			"args":    *args,
+		}).Error(err)
+		return nil, err
+	}
+
+	if team.AdminID != user.ID {
+		return nil, errors.New("User not admin of team")
+	}
+
+	err = db.Table("lists").Joins("LEFT JOIN tasks on lists.id = tasks.list_id").
 		Select("lists.*,"+
 			"sum(case when complete = true AND tasks.archived = false then 1 else 0 end) as completed_tasks,"+
 			"sum(case when complete = false AND tasks.archived = false then 1 else 0 end) as pending_tasks").
-		Where("lists.archived = false AND lists.user_id = ?", user.ID).
+		Where("lists.archived = false AND lists.user_id = ? AND lists.team_id = ?", user.ID, team.ID).
 		Group("lists.id").
 		Find(&lists).Error
 	if err != nil {
