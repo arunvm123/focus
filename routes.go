@@ -31,6 +31,10 @@ func initialiseRoutes(server *server) *gin.Engine {
 
 	private.POST("/create/organisation", server.createOrganisation)
 
+	organisationAdmin := r.Group("/")
+	organisationAdmin.Use(server.checkIfOrganisationAdmin())
+	organisationAdmin.POST("/update/organisation", server.updateOrganisation)
+
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)
 	private.POST("/update/password", server.updatePassword)
@@ -39,7 +43,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 	// private.GET("/get/notification/tokens", server.getNotificationTokens)
 
 	admin := r.Group("/")
-	admin.Use(server.CheckIfAdminMiddleware())
+	admin.Use(server.checkIfAdminMiddleware())
 
 	private.POST("/create/bug", server.createBug)
 	admin.GET("/admin/check", server.adminCheck)

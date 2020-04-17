@@ -36,7 +36,47 @@ func (server *server) tokenAuthorisationMiddleware() gin.HandlerFunc {
 	}
 }
 
-func (server *server) CheckIfAdminMiddleware() gin.HandlerFunc {
+func (server *server) checkIfOrganisationAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := c.Request.Header.Get("Authorization")
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, "Provide token")
+			c.Abort()
+			return
+		}
+
+		user, err := server.getUserFromToken(token)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"func":    "checkIfOrganisationAdmin",
+				"subFunc": "server.getUserFromToken",
+			}).Error(err)
+			c.JSON(http.StatusUnauthorized, "Invalid user")
+			c.Abort()
+			return
+		}
+
+		orgID := c.Query("organisationID")
+		if orgID == "" {
+			c.JSON(http.StatusUnauthorized, "Provide organisation id")
+			c.Abort()
+			return
+		}
+		c.Keys = make(map[string]interface{})
+		c.Keys["organisationID"] = orgID
+
+		if user.CheckIfOrganisationAdmin(server.db, orgID) == false {
+			c.JSON(http.StatusUnauthorized, "Invalid user")
+			c.Abort()
+			return
+		}
+
+		c.Keys["user"] = user
+		c.Next()
+	}
+}
+
+func (server *server) checkIfAdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.Request.Header.Get("Authorization")
 		if token == "" {
