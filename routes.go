@@ -30,6 +30,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 	private.DELETE("/delete/tasks", server.deleteTasks)
 
 	private.POST("/create/organisation", server.createOrganisation)
+	private.GET("/get/organisations", server.getOrganisations)
 
 	organisationAdmin := r.Group("/")
 	organisationAdmin.Use(server.checkIfOrganisationAdmin())

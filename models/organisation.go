@@ -79,6 +79,23 @@ func (user *User) CreateOrganisation(db *gorm.DB, args *CreateOrganisationArgs) 
 	return nil
 }
 
+func (user *User) GetOrganisations(db *gorm.DB) (*[]Organisation, error) {
+	var organisations []Organisation
+
+	err := db.Table("organisations").Joins("JOIN organisation_members on organisations.id = organisation_members.organisation_id").
+		Where("user_id = ? AND organisations.archived = false", user.ID).Select("organisations.*").Find(&organisations).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":   "GetOrganisations",
+			"info":   "retrieving organisations of user",
+			"userID": user.ID,
+		}).Error(err)
+		return nil, err
+	}
+
+	return &organisations, nil
+}
+
 func (admin *User) UpdateOrganisation(db *gorm.DB, args *UpdateOrganisationArgs) error {
 	org, err := getOrganisationFromID(db, args.ID)
 	if err != nil {
