@@ -39,7 +39,7 @@ func (server *server) createList(c *gin.Context) {
 			"userID":  user.ID,
 			"args":    args,
 		}).Error(err)
-		c.JSON(http.StatusInternalServerError, err)
+		c.JSON(http.StatusInternalServerError, "Error when creating list")
 		return
 	}
 

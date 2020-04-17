@@ -37,6 +37,7 @@ type ListInfo struct {
 
 // CreateListArgs defines the args for create list api
 type CreateListArgs struct {
+	TeamID  string `json:"teamID" binding:"required"`
 	Heading string `json:"heading"`
 }
 
@@ -64,15 +65,31 @@ type UpdateListArgs struct {
 // }
 
 func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) (*List, error) {
+	team, err := getTeamFromID(db, args.TeamID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "CreateList",
+			"subFunc": "getTeamFromID",
+			"userID":  user.ID,
+			"args":    *args,
+		}).Error(err)
+		return nil, err
+	}
+
+	if team.AdminID != user.ID {
+		return nil, errors.New("User not admin of team")
+	}
+
 	list := List{
 		ID:        uuid.NewV4().String(),
 		UserID:    user.ID,
 		Archived:  false,
 		CreatedAt: time.Now().Unix(),
 		Heading:   args.Heading,
+		TeamID:    args.TeamID,
 	}
 
-	err := list.Create(db)
+	err = list.Create(db)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "CreateList",

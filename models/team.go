@@ -50,3 +50,19 @@ func (user *User) createPersonalTeam(db *gorm.DB, org *Organisation) error {
 
 	return nil
 }
+
+func getTeamFromID(db *gorm.DB, teamID string) (*Team, error) {
+	var team Team
+
+	err := db.Find(&team, "id = ? AND archived = false", teamID).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":   "getTeamFromID",
+			"info":   "retrieving team with ID",
+			"teamID": teamID,
+		}).Error(err)
+		return nil, err
+	}
+
+	return &team, nil
+}
