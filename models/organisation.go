@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -182,4 +183,24 @@ func (user *User) CheckIfOrganisationAdmin(db *gorm.DB, orgID string) bool {
 	}
 
 	return true
+}
+
+func GetOrganisationName(db *gorm.DB, organisationID string) (string, error) {
+	var name []string
+
+	err := db.Table("organisations").Where("id = ? AND archived = false", organisationID).Pluck("name", &name).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":           "GetOrganisationName",
+			"info":           "retrieving organisation name",
+			"organisationID": organisationID,
+		}).Error(err)
+		return "", err
+	}
+
+	if len(name) != 1 {
+		return "", errors.New("error fetching name of organiation")
+	}
+
+	return name[0], nil
 }

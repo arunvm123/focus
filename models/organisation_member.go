@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
@@ -8,6 +10,7 @@ import (
 type OrganisationMember struct {
 	OrganisationID string `json:"organisationID" gorm:"primary_key;auto_increment:false"`
 	UserID         int    `json:"userID" gorm:"primary_key;auto_increment:false"`
+	JoinedAt       int64  `json:"joinedAt"`
 }
 
 // Create is a helper function to add a user to organisation
@@ -24,6 +27,7 @@ func addUserToOrganisation(db *gorm.DB, userID int, orgID string) error {
 	orgMember := OrganisationMember{
 		OrganisationID: orgID,
 		UserID:         userID,
+		JoinedAt:       time.Now().Unix(),
 	}
 
 	err := orgMember.Create(db)

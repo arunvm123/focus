@@ -31,10 +31,12 @@ func initialiseRoutes(server *server) *gin.Engine {
 
 	private.POST("/create/organisation", server.createOrganisation)
 	private.GET("/get/organisations", server.getOrganisations)
+	private.POST("/accept/organisation/invite", server.acceptOrganisationInvite)
 
 	organisationAdmin := r.Group("/")
 	organisationAdmin.Use(server.checkIfOrganisationAdmin())
 	organisationAdmin.POST("/update/organisation", server.updateOrganisation)
+	organisationAdmin.POST("/organisation/invite", server.inviteToOrganisation)
 
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)
