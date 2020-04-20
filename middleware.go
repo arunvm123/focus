@@ -38,18 +38,11 @@ func (server *server) tokenAuthorisationMiddleware() gin.HandlerFunc {
 
 func (server *server) checkIfOrganisationAdmin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := c.Request.Header.Get("Authorization")
-		if token == "" {
-			c.JSON(http.StatusUnauthorized, "Provide token")
-			c.Abort()
-			return
-		}
-
-		user, err := server.getUserFromToken(token)
+		user, err := getUserFromContext(c)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"func":    "checkIfOrganisationAdmin",
-				"subFunc": "server.getUserFromToken",
+				"subFunc": "getUserFromContext",
 			}).Error(err)
 			c.JSON(http.StatusUnauthorized, "Invalid user")
 			c.Abort()
@@ -78,18 +71,11 @@ func (server *server) checkIfOrganisationAdmin() gin.HandlerFunc {
 
 func (server *server) checkIfAdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := c.Request.Header.Get("Authorization")
-		if token == "" {
-			c.JSON(http.StatusUnauthorized, "Provide token")
-			c.Abort()
-			return
-		}
-
-		user, err := server.getUserFromToken(token)
+		user, err := getUserFromContext(c)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"func":    "CheckIfAdminMiddleware",
-				"subFunc": "server.getUserFromToken",
+				"subFunc": "getUserFromContext",
 			}).Error(err)
 			c.JSON(http.StatusUnauthorized, "Invalid user")
 			c.Abort()

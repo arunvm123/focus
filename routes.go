@@ -34,7 +34,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 	private.POST("/accept/organisation/invite", server.acceptOrganisationInvite)
 
 	organisationAdmin := r.Group("/")
-	organisationAdmin.Use(server.checkIfOrganisationAdmin())
+	organisationAdmin.Use(server.tokenAuthorisationMiddleware(), server.checkIfOrganisationAdmin())
 	organisationAdmin.POST("/update/organisation", server.updateOrganisation)
 	organisationAdmin.POST("/organisation/invite", server.inviteToOrganisation)
 
@@ -46,7 +46,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 	// private.GET("/get/notification/tokens", server.getNotificationTokens)
 
 	admin := r.Group("/")
-	admin.Use(server.checkIfAdminMiddleware())
+	admin.Use(server.tokenAuthorisationMiddleware(), server.checkIfAdminMiddleware())
 
 	private.POST("/create/bug", server.createBug)
 	admin.GET("/admin/check", server.adminCheck)
