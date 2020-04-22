@@ -49,6 +49,10 @@ func initialiseRoutes(server *server) *gin.Engine {
 	teamAdmin.POST("/update/team", server.updateTeam)
 	teamAdmin.POST("/add/team/member", server.addTeamMember)
 
+	teamMember := r.Group("/")
+	teamMember.Use(server.tokenAuthorisationMiddleware(), server.checkIfTeamMember())
+	teamMember.GET("/get/team/members", server.getTeamMembers)
+
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)
 	private.POST("/update/password", server.updatePassword)

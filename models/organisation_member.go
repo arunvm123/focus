@@ -27,7 +27,7 @@ type OrganisationMemberInfo struct {
 	OrganisationID string  `json:"-"`
 	UserID         int     `json:"userId"`
 	Name           string  `json:"name"`
-	ProfilePicture *string `json:"profilePicture"`
+	ProfilePic     *string `json:"profilePic"`
 }
 
 func GetOrganisationMembers(db *gorm.DB, organisationID string) (*[]OrganisationMemberInfo, error) {
