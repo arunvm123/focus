@@ -24,7 +24,7 @@ func (member *OrganisationMember) Save(db *gorm.DB) error {
 }
 
 type OrganisationMemberInfo struct {
-	OrganisationID string  `json:"organisationId"`
+	OrganisationID string  `json:"-"`
 	UserID         int     `json:"userId"`
 	Name           string  `json:"name"`
 	ProfilePicture *string `json:"profilePicture"`

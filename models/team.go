@@ -28,6 +28,48 @@ func (team *Team) Save(db *gorm.DB) error {
 	return db.Save(&team).Error
 }
 
+type CreateTeamArgs struct {
+	OrganisationID string  `json:"-"`
+	Name           string  `json:"name" binding:"required"`
+	Description    *string `json:"description"`
+}
+
+func (user *User) CreateTeam(db *gorm.DB, args *CreateTeamArgs) error {
+	team := Team{
+		ID:             uuid.NewV4().String(),
+		AdminID:        user.ID,
+		Archived:       false,
+		CreatedAt:      time.Now().Unix(),
+		Name:           args.Name,
+		OrganisationID: args.OrganisationID,
+		Description:    args.Description,
+	}
+
+	err := team.Create(db)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "CreateTeam",
+			"subFunc": "team.Create",
+			"userID":  user.ID,
+			"args":    *args,
+		}).Error(err)
+		return err
+	}
+
+	err = addUserToTeam(db, user.ID, team.ID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "CreateTeam",
+			"subFunc": "addUserToTeam",
+			"userID":  user.ID,
+			"args":    *args,
+		}).Error(err)
+		return err
+	}
+
+	return nil
+}
+
 func (user *User) createPersonalTeam(db *gorm.DB, org *Organisation) error {
 	team := Team{
 		ID:             uuid.NewV4().String(),

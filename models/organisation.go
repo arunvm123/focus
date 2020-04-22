@@ -44,7 +44,7 @@ type CreateOrganisationArgs struct {
 }
 
 type UpdateOrganisationArgs struct {
-	ID             string  `json:"id"`
+	ID             string  `json:"-"`
 	Name           *string `json:"name"`
 	DisplayPicture *string `json:"displayPicture"`
 	Theme          *string `json:"theme"`

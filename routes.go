@@ -42,6 +42,8 @@ func initialiseRoutes(server *server) *gin.Engine {
 	organisationMember.Use(server.tokenAuthorisationMiddleware(), server.checkIfOrganisationMember())
 	organisationMember.GET("/get/organisation/members", server.getOrganisationMembers)
 
+	organisationMember.POST("/create/team", server.createTeam)
+
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)
 	private.POST("/update/password", server.updatePassword)
