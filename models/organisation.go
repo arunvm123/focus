@@ -44,7 +44,7 @@ type CreateOrganisationArgs struct {
 }
 
 type UpdateOrganisationArgs struct {
-	ID             string  `json:"id"`
+	ID             string  `json:"-"`
 	Name           *string `json:"name"`
 	DisplayPicture *string `json:"displayPicture"`
 	Theme          *string `json:"theme"`
@@ -172,6 +172,16 @@ func (user *User) createPersonalOrganisation(db *gorm.DB) (*Organisation, error)
 		log.WithFields(log.Fields{
 			"func":    "createPersonalOrganisation",
 			"subFunc": "org.Create",
+			"userID":  user.ID,
+		}).Error(err)
+		return nil, err
+	}
+
+	err = addUserToOrganisation(db, user.ID, org.ID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "UserSignup",
+			"subFunc": "addUserToOrganisation",
 			"userID":  user.ID,
 		}).Error(err)
 		return nil, err

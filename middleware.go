@@ -55,7 +55,6 @@ func (server *server) checkIfOrganisationAdmin() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		c.Keys = make(map[string]interface{})
 		c.Keys["organisationID"] = orgID
 
 		if user.CheckIfOrganisationAdmin(server.db, orgID) == false {
@@ -64,7 +63,96 @@ func (server *server) checkIfOrganisationAdmin() gin.HandlerFunc {
 			return
 		}
 
-		c.Keys["user"] = user
+		c.Next()
+	}
+}
+
+func (server *server) checkIfOrganisationMember() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, err := getUserFromContext(c)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"func":    "checkIfOrganisationMember",
+				"subFunc": "getUserFromContext",
+			}).Error(err)
+			c.JSON(http.StatusUnauthorized, "Invalid user")
+			return
+		}
+
+		orgID := c.Query("organisationID")
+		if orgID == "" {
+			c.JSON(http.StatusUnauthorized, "Provide organisation id")
+			c.Abort()
+			return
+		}
+		c.Keys["organisationID"] = orgID
+
+		if user.CheckIfOrganisationMember(server.db, orgID) == false {
+			c.JSON(http.StatusUnauthorized, "Invalid user")
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func (server *server) checkIfTeamAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, err := getUserFromContext(c)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"func":    "checkIfTeamAdmin",
+				"subFunc": "getUserFromContext",
+			}).Error(err)
+			c.JSON(http.StatusUnauthorized, "Invalid user")
+			return
+		}
+
+		teamID := c.Query("teamID")
+		if teamID == "" {
+			c.JSON(http.StatusUnauthorized, "Provide team id")
+			c.Abort()
+			return
+		}
+		c.Keys["teamID"] = teamID
+
+		if user.CheckIfTeamAdmin(server.db, teamID) == false {
+			c.JSON(http.StatusUnauthorized, "Invalid user")
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func (server *server) checkIfTeamMember() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, err := getUserFromContext(c)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"func":    "checkIfTeamAdmin",
+				"subFunc": "getUserFromContext",
+			}).Error(err)
+			c.JSON(http.StatusUnauthorized, "Invalid user")
+			return
+		}
+
+		teamID := c.Query("teamID")
+		if teamID == "" {
+			c.JSON(http.StatusUnauthorized, "Provide team id")
+			c.Abort()
+			return
+		}
+		c.Keys["teamID"] = teamID
+
+		if user.CheckIfTeamMember(server.db, teamID) == false {
+			c.JSON(http.StatusUnauthorized, "Invalid user")
+			c.Abort()
+			return
+		}
+
 		c.Next()
 	}
 }
@@ -107,8 +195,6 @@ func (server *server) checkIfAdminMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Keys = make(map[string]interface{})
-		c.Keys["user"] = user
 		c.Next()
 	}
 }

@@ -190,17 +190,6 @@ func UserSignup(db *gorm.DB, args *SignUpArgs, googleOauth bool) (*User, error) 
 		return nil, err
 	}
 
-	err = addUserToOrganisation(db, user.ID, org.ID)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"func":        "UserSignup",
-			"subFunc":     "addUserToOrganisation",
-			"email":       args.Email,
-			"googleOauth": googleOauth,
-		}).Error(err)
-		return nil, err
-	}
-
 	err = user.createPersonalTeam(db, org)
 	if err != nil {
 		log.WithFields(log.Fields{
