@@ -50,16 +50,20 @@ func GetOrganisationMembers(db *gorm.DB, organisationID string) (*[]Organisation
 }
 
 func (user *User) CheckIfOrganisationMember(db *gorm.DB, organisationID string) bool {
+	return checkIfUserIsOrganisationMember(db, user.ID, organisationID)
+}
+
+func checkIfUserIsOrganisationMember(db *gorm.DB, userID int, organisationID string) bool {
 	var count int
 
 	err := db.Table("organisations").Joins("JOIN organisation_members on organisations.id = organisation_members.organisation_id").
-		Where("organisations.id = ? AND archived = false AND organisation_members.user_id = ? AND organisations.type = ?", organisationID, user.ID, organistation).
+		Where("organisations.id = ? AND archived = false AND organisation_members.user_id = ? AND organisations.type = ?", organisationID, userID, organistation).
 		Count(&count).Error
 	if err != nil {
 		log.WithFields(log.Fields{
-			"func":           "CheckIfOrganisationMember",
+			"func":           "checkIfUserIsOrganisationMember",
 			"info":           "checking if user is a member of organisation",
-			"userID":         user.ID,
+			"userID":         userID,
 			"organisationID": organisationID,
 		}).Error(err)
 		return false
