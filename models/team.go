@@ -90,6 +90,16 @@ func (user *User) createPersonalTeam(db *gorm.DB, org *Organisation) error {
 		return err
 	}
 
+	err = addUserToTeam(db, user.ID, team.ID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "createPersonalTeam",
+			"subFunc": "addUserToTeam",
+			"userID":  user.ID,
+		}).Error(err)
+		return err
+	}
+
 	return nil
 }
 

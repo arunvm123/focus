@@ -177,6 +177,16 @@ func (user *User) createPersonalOrganisation(db *gorm.DB) (*Organisation, error)
 		return nil, err
 	}
 
+	err = addUserToOrganisation(db, user.ID, org.ID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "UserSignup",
+			"subFunc": "addUserToOrganisation",
+			"userID":  user.ID,
+		}).Error(err)
+		return nil, err
+	}
+
 	return &org, nil
 }
 
