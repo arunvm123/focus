@@ -97,6 +97,36 @@ func (server *server) checkIfOrganisationMember() gin.HandlerFunc {
 	}
 }
 
+func (server *server) checkIfTeamAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, err := getUserFromContext(c)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"func":    "checkIfTeamAdmin",
+				"subFunc": "getUserFromContext",
+			}).Error(err)
+			c.JSON(http.StatusUnauthorized, "Invalid user")
+			return
+		}
+
+		teamID := c.Query("teamID")
+		if teamID == "" {
+			c.JSON(http.StatusUnauthorized, "Provide team id")
+			c.Abort()
+			return
+		}
+		c.Keys["teamID"] = teamID
+
+		if user.CheckIfTeamAdmin(server.db, teamID) == false {
+			c.JSON(http.StatusUnauthorized, "Invalid user")
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
 func (server *server) checkIfAdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, err := getUserFromContext(c)

@@ -53,7 +53,7 @@ func (user *User) CheckIfOrganisationMember(db *gorm.DB, organisationID string) 
 	var count int
 
 	err := db.Table("organisations").Joins("JOIN organisation_members on organisations.id = organisation_members.organisation_id").
-		Where("organisations.id = ? AND archived = false AND organisation_members.user_id = ?", organisationID, user.ID).
+		Where("organisations.id = ? AND archived = false AND organisation_members.user_id = ? AND organisations.type = ?", organisationID, user.ID, organistation).
 		Count(&count).Error
 	if err != nil {
 		log.WithFields(log.Fields{
