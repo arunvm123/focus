@@ -6,8 +6,8 @@ import (
 
 	"firebase.google.com/go/messaging"
 	push "github.com/arunvm/travail-backend/push_notification"
+	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -137,7 +137,7 @@ func (user *User) CreateTask(db *gorm.DB, args *CreateTaskArgs) (*Task, error) {
 
 	tx := db.Begin()
 
-	task.ID = uuid.NewV4().String()
+	task.ID = uuid.New().String()
 	task.Info = args.Info
 	task.Order = args.Order
 	task.ExpiresAt = args.ExpiresAt

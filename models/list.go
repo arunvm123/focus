@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -85,7 +85,7 @@ func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) (*List, error) {
 	}
 
 	list := List{
-		ID:        uuid.NewV4().String(),
+		ID:        uuid.New().String(),
 		UserID:    user.ID,
 		Archived:  false,
 		CreatedAt: time.Now().Unix(),

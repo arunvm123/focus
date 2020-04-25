@@ -3,8 +3,8 @@ package models
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -42,7 +42,7 @@ type UpdateTeamArgs struct {
 
 func (user *User) CreateTeam(db *gorm.DB, args *CreateTeamArgs) error {
 	team := Team{
-		ID:             uuid.NewV4().String(),
+		ID:             uuid.New().String(),
 		AdminID:        user.ID,
 		Archived:       false,
 		CreatedAt:      time.Now().Unix(),
@@ -111,7 +111,7 @@ func (teamAdmin *User) UpdateTeam(db *gorm.DB, args *UpdateTeamArgs) error {
 
 func (user *User) createPersonalTeam(db *gorm.DB, org *Organisation) error {
 	team := Team{
-		ID:             uuid.NewV4().String(),
+		ID:             uuid.New().String(),
 		AdminID:        user.ID,
 		Archived:       false,
 		CreatedAt:      time.Now().Unix(),
