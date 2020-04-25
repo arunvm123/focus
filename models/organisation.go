@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -52,7 +52,7 @@ type UpdateOrganisationArgs struct {
 
 func (user *User) CreateOrganisation(db *gorm.DB, args *CreateOrganisationArgs) error {
 	org := Organisation{
-		ID:             uuid.NewV4().String(),
+		ID:             uuid.New().String(),
 		AdminID:        user.ID,
 		Archived:       false,
 		CreatedAt:      time.Now().Unix(),
@@ -159,7 +159,7 @@ func getOrganisationFromID(db *gorm.DB, organisationID string) (*Organisation, e
 
 func (user *User) createPersonalOrganisation(db *gorm.DB) (*Organisation, error) {
 	org := Organisation{
-		ID:        uuid.NewV4().String(),
+		ID:        uuid.New().String(),
 		AdminID:   user.ID,
 		Archived:  false,
 		CreatedAt: time.Now().Unix(),
