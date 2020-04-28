@@ -142,6 +142,23 @@ func (user *User) createPersonalTeam(db *gorm.DB, org *Organisation) error {
 	return nil
 }
 
+func (user *User) GetPersonalTeam(db *gorm.DB) (string, error) {
+	var team Team
+
+	err := db.Table("organisations").Joins("JOIN teams on organisations.id = teams.organisation_id").
+		Where("organisations.admin_id = ? AND type = ?", user.ID, personal).Select("teams.*").
+		Find(&team).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func": "GetPersonalTeam",
+			"info": "retreiving personal team of user",
+		}).Error(err)
+		return "", err
+	}
+
+	return team.ID, nil
+}
+
 func getTeamFromID(db *gorm.DB, teamID string) (*Team, error) {
 	var team Team
 

@@ -68,22 +68,35 @@ func (server *server) login(c *gin.Context) {
 		return
 	}
 
+	personalTeam, err := user.GetPersonalTeam(server.db)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "login",
+			"subFunc": "user.GetPersonalTeam",
+			"userID":  user.ID,
+		}).Error(err)
+		c.JSON(http.StatusInternalServerError, "Error while retrieving personal team")
+		return
+	}
+
 	c.SetCookie("Authorization", signedToken, 0, "", "travail.in", false, false)
 
 	c.JSON(http.StatusOK, struct {
-		Token       string  `json:"token"`
-		Name        string  `json:"name"`
-		ID          int     `json:"id"`
-		Email       string  `json:"email"`
-		ProfilePic  *string `json:"profilePic"`
-		GoogleOauth bool    `json:"googleOauth"`
+		Token        string  `json:"token"`
+		Name         string  `json:"name"`
+		ID           int     `json:"id"`
+		Email        string  `json:"email"`
+		ProfilePic   *string `json:"profilePic"`
+		GoogleOauth  bool    `json:"googleOauth"`
+		PersonalTeam string  `json:"personalTeam"`
 	}{
-		Token:       signedToken,
-		Email:       user.Email,
-		ID:          user.ID,
-		Name:        user.Name,
-		ProfilePic:  user.ProfilePic,
-		GoogleOauth: user.GoogleOauth,
+		Token:        signedToken,
+		Email:        user.Email,
+		ID:           user.ID,
+		Name:         user.Name,
+		ProfilePic:   user.ProfilePic,
+		GoogleOauth:  user.GoogleOauth,
+		PersonalTeam: personalTeam,
 	})
 	return
 }
