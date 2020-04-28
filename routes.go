@@ -7,8 +7,66 @@ import (
 func initialiseRoutes(server *server) *gin.Engine {
 	r := gin.Default()
 
-	r.POST("/signup", server.signup)
-	r.POST("/login", server.login)
+	public := r.Group("/")
+	public.POST("/signup", server.signup)
+	public.POST("/login", server.login)
+	public.POST("/google/login", server.loginWithGoogle)
+	public.POST("/verify/email", server.verifyEmail)
+	public.POST("/resend/verify/email", server.resendVerifyEmail)
+	public.POST("/forgot/password", server.forgotPassword)
+	public.POST("/forgot/password/reset", server.resetPassword)
+
+	private := r.Group("/")
+	private.Use(server.tokenAuthorisationMiddleware())
+
+	private.POST("/create/list", server.createList)
+	private.POST("/get/lists", server.getLists)
+	private.POST("/update/list", server.updateList)
+
+	// private.POST("/create/tasks", server.createTasks)
+	private.POST("/create/task", server.createTask)
+	private.POST("/get/tasks", server.getTasks)
+	private.POST("/update/task", server.updateTask)
+	private.DELETE("/delete/tasks", server.deleteTasks)
+
+	private.POST("/create/organisation", server.createOrganisation)
+	private.GET("/get/organisations", server.getOrganisations)
+	private.POST("/accept/organisation/invite", server.acceptOrganisationInvite)
+
+	organisationAdmin := r.Group("/")
+	organisationAdmin.Use(server.tokenAuthorisationMiddleware(), server.checkIfOrganisationAdmin())
+	organisationAdmin.POST("/update/organisation", server.updateOrganisation)
+	organisationAdmin.POST("/organisation/invite", server.inviteToOrganisation)
+
+	organisationMember := r.Group("/")
+	organisationMember.Use(server.tokenAuthorisationMiddleware(), server.checkIfOrganisationMember())
+	organisationMember.GET("/get/organisation/members", server.getOrganisationMembers)
+
+	organisationMember.POST("/create/team", server.createTeam)
+
+	teamAdmin := r.Group("/")
+	teamAdmin.Use(server.tokenAuthorisationMiddleware(), server.checkIfTeamAdmin())
+	teamAdmin.POST("/update/team", server.updateTeam)
+	teamAdmin.POST("/add/team/member", server.addTeamMember)
+
+	teamMember := r.Group("/")
+	teamMember.Use(server.tokenAuthorisationMiddleware(), server.checkIfTeamMember())
+	teamMember.GET("/get/team/members", server.getTeamMembers)
+
+	private.GET("/get/profile", server.getProfile)
+	private.POST("/update/profile", server.updateProfile)
+	private.POST("/update/password", server.updatePassword)
+
+	private.POST("/add/notification/token", server.addNotificationToken)
+	// private.GET("/get/notification/tokens", server.getNotificationTokens)
+
+	admin := r.Group("/")
+	admin.Use(server.tokenAuthorisationMiddleware(), server.checkIfAdminMiddleware())
+
+	private.POST("/create/bug", server.createBug)
+	admin.GET("/admin/check", server.adminCheck)
+	admin.GET("/get/bugs", server.getBugs)
+	admin.POST("/update/bug", server.updateBug)
 
 	return r
 }

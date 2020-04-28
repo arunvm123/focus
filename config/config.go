@@ -4,14 +4,19 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
-// Config lists out configuration for all dependencies
-type Config struct {
-	Database  DatabaseConfig `yaml:"database"`
-	JWTSecret string         `yaml:"jwt_secret"`
+var configuration config
+
+type config struct {
+	Port                     string         `yaml:"port"`
+	DomainURL                string         `yaml:"domain_url"`
+	Database                 databaseConfig `yaml:"database"`
+	JWTSecret                string         `yaml:"jwt_secret"`
+	SendgridKey              string         `yaml:"sendgrid_key"`
+	FCMServiceAccountKeyPath string         `yaml:"fcm_service_account_key_path"`
+	AdminIDs                 []int          `yaml:"admin_ids"`
 }
 
-// DatabaseConfig defines structure for database configuration
-type DatabaseConfig struct {
+type databaseConfig struct {
 	User         string `yaml:"user"`
 	Password     string `yaml:"password"`
 	DatabaseName string `yaml:"database_name"`
@@ -19,14 +24,17 @@ type DatabaseConfig struct {
 	Port         string `json:"port"`
 }
 
-// GetConfig looks for config.yaml in the current directory and reads
-// into the config struct
-func GetConfig() (*Config, error) {
-	var config Config
-	err := cleanenv.ReadConfig("config.yaml", &config)
+func Initialise(filepath string) (*config, error) {
+	err := cleanenv.ReadConfig(filepath, &configuration)
 	if err != nil {
 		return nil, err
 	}
 
-	return &config, nil
+	return &configuration, nil
+}
+
+// GetConfig looks for config.yaml in the current directory and reads
+// into the config struct
+func GetConfig() (*config, error) {
+	return &configuration, nil
 }
