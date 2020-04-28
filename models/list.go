@@ -31,8 +31,9 @@ func (l *List) Save(db *gorm.DB) error {
 
 type ListInfo struct {
 	List
-	PendingTasks   int `json:"pendingTasks"`
-	CompletedTasks int `json:"completedTasks"`
+	PendingTasks   int  `json:"pendingTasks"`
+	CompletedTasks int  `json:"completedTasks"`
+	Active         bool `json:"active"` //Additional info to help with UI
 }
 
 // CreateListArgs defines the args for create list api
