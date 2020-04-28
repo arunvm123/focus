@@ -42,7 +42,9 @@ func (server *server) getLists(c *gin.Context) {
 		return
 	}
 
-	(*lists)[0].Active = true
+	if len(*lists) != 0 {
+		(*lists)[0].Active = true
+	}
 
 	c.JSON(http.StatusOK, lists)
 	return
