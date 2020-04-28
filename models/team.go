@@ -142,7 +142,7 @@ func (user *User) createPersonalTeam(db *gorm.DB, org *Organisation) error {
 	return nil
 }
 
-func (user *User) GetPersonalTeam(db *gorm.DB) (string, error) {
+func (user *User) GetPersonalTeamID(db *gorm.DB) (string, error) {
 	var team Team
 
 	err := db.Table("organisations").Joins("JOIN teams on organisations.id = teams.organisation_id").
@@ -150,7 +150,7 @@ func (user *User) GetPersonalTeam(db *gorm.DB) (string, error) {
 		Find(&team).Error
 	if err != nil {
 		log.WithFields(log.Fields{
-			"func": "GetPersonalTeam",
+			"func": "GetPersonalTeamID",
 			"info": "retreiving personal team of user",
 		}).Error(err)
 		return "", err
