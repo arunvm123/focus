@@ -24,4 +24,5 @@ require (
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20200326112834-f447254575fd // indirect
 	google.golang.org/grpc v1.28.0 // indirect
+	gopkg.in/go-playground/assert.v1 v1.2.1
 )

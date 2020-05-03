@@ -12,7 +12,7 @@ import (
 // List model
 type List struct {
 	ID        string `json:"id" gorm:"primary_key"`
-	UserID    int    `json:"userId"`
+	UserID    int    `json:"userID"`
 	TeamID    string `json:"teamID"`
 	Heading   string `json:"heading"`
 	CreatedAt int64  `json:"createdAt"`
