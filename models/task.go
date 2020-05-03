@@ -164,8 +164,8 @@ func (user *User) CreateTask(db *gorm.DB, args *CreateTaskArgs) (*Task, error) {
 	return &task, nil
 }
 
-func (user *User) GetTasks(db *gorm.DB, args *GetTasksArgs) (*[]Task, error) {
-	var tasks []Task
+func (user *User) GetTasks(db *gorm.DB, args *GetTasksArgs) (*[]TaskInfo, error) {
+	var tasks []TaskInfo
 
 	var completeFilter string
 	if args.Complete != nil {
@@ -175,7 +175,7 @@ func (user *User) GetTasks(db *gorm.DB, args *GetTasksArgs) (*[]Task, error) {
 	err := db.Table("lists").Joins("JOIN tasks on tasks.list_id = lists.id").
 		Where("lists.archived = false AND tasks.archived = false AND lists.user_id = ? AND lists.id = ?"+completeFilter, user.ID, args.ListID).
 		Order("order").
-		Select("tasks.*").Find(&tasks).Error
+		Select("tasks.*,lists.heading").Find(&tasks).Error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":   "GetTasks",
