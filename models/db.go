@@ -21,6 +21,8 @@ func MigrateDB(db *gorm.DB) {
 	db.AutoMigrate(&Team{})
 	db.AutoMigrate(&TeamMember{})
 
+	db.AutoMigrate(&Board{})
+
 	db.AutoMigrate(Bug{})
 
 	err := db.Model(List{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT").Error
@@ -82,5 +84,13 @@ func MigrateDB(db *gorm.DB) {
 	err = db.Model(OrganisationInvitation{}).AddForeignKey("organisation_id", "organisations(id)", "RESTRICT", "RESTRICT").Error
 	if err != nil {
 		log.Fatalf("Error adding foreign key for organisation_invitations model\n%v", err)
+	}
+	err = db.Model(Board{}).AddForeignKey("admin_id", "users(id)", "RESTRICT", "RESTRICT").Error
+	if err != nil {
+		log.Fatalf("Error adding foreign key for board model\n%v", err)
+	}
+	err = db.Model(Board{}).AddForeignKey("team_id", "teams(id)", "RESTRICT", "RESTRICT").Error
+	if err != nil {
+		log.Fatalf("Error adding foreign key for board model\n%v", err)
 	}
 }
