@@ -37,6 +37,10 @@ type UpdateBoardArgs struct {
 	Title  *string `json:"title"`
 }
 
+type GetBoardsArgs struct {
+	TeamID string `json:"teamID"`
+}
+
 func (teamMember *User) CreateBoard(db *gorm.DB, args *CreateBoardArgs) error {
 	board := Board{
 		ID:        uuid.New().String(),
@@ -93,6 +97,22 @@ func (teamMember *User) UpdateBoard(db *gorm.DB, args *UpdateBoardArgs) error {
 	}
 
 	return nil
+}
+
+func GetBoards(db *gorm.DB, args *GetBoardsArgs) (*[]Board, error) {
+	var boards []Board
+
+	err := db.Find(&boards, "team_id = ? AND archived = false", args.TeamID).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":   "GetBoards",
+			"info":   "retrieving boards of team",
+			"teamID": args.TeamID,
+		}).Error(err)
+		return nil, err
+	}
+
+	return &boards, nil
 }
 
 func getBoard(db *gorm.DB, boardID string) (*Board, error) {
