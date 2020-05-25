@@ -60,6 +60,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 
 	teamMember.POST("/create/board/column", server.createBoardColumn)
 	teamMember.GET("/get/board/columns", server.getBoardColumns)
+	teamMember.POST("/update/board/column", server.updateBoardColumn)
 
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)

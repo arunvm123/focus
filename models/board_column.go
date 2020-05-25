@@ -21,8 +21,13 @@ func (bc *BoardColumn) Save(db *gorm.DB) error {
 }
 
 type CreateBoardColumnArgs struct {
-	BoardID string `json:"boardID"`
-	Name    string `json:"name"`
+	BoardID string `json:"boardID" binding:"required"`
+	Name    string `json:"name" binding:"required"`
+}
+
+type UpdateBoardColumnArgs struct {
+	ColumnID string  `json:"ColumnID" binding:"required"`
+	Name     *string `json:"name"`
 }
 
 func (user *User) CreateBoardColumn(db *gorm.DB, args *CreateBoardColumnArgs) error {
@@ -60,4 +65,48 @@ func GetBoardColumns(db *gorm.DB, boardID string) (*[]BoardColumn, error) {
 	}
 
 	return &bc, nil
+}
+
+func UpdateBoardColumn(db *gorm.DB, args *UpdateBoardColumnArgs) error {
+	column, err := getBoardColumn(db, args.ColumnID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":     "UpdateBoardColumn",
+			"subFunc":  "getBoardColumn",
+			"columnID": args.ColumnID,
+		}).Error(err)
+		return err
+	}
+
+	if args.Name != nil {
+		column.Name = *args.Name
+	}
+
+	err = column.Save(db)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":     "UpdateBoardColumn",
+			"subFunc":  "column.Save",
+			"columnID": args.ColumnID,
+		}).Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func getBoardColumn(db *gorm.DB, columnID string) (*BoardColumn, error) {
+	var column BoardColumn
+
+	err := db.Find(&column, "id = ?", columnID).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":     "getBoardColumn",
+			"info":     "retrieving column details",
+			"columdID": columnID,
+		}).Error(err)
+		return nil, err
+	}
+
+	return &column, nil
 }
