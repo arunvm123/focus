@@ -52,10 +52,13 @@ func initialiseRoutes(server *server) *gin.Engine {
 	teamMember := r.Group("/")
 	teamMember.Use(server.tokenAuthorisationMiddleware(), server.checkIfTeamMember())
 	teamMember.GET("/get/team/members", server.getTeamMembers)
+
 	teamMember.POST("/create/board", server.createBoard)
 	teamMember.POST("/get/boards", server.getBoards)
 	teamMember.POST("/update/board", server.updateBoard)
 	teamMember.DELETE("/delete/board", server.deleteBoard) // Implementation Pending
+
+	teamMember.POST("/create/board/column", server.createBoardColumn)
 
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)
