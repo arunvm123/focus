@@ -45,3 +45,19 @@ func (user *User) CreateBoardColumn(db *gorm.DB, args *CreateBoardColumnArgs) er
 
 	return nil
 }
+
+func GetBoardColumns(db *gorm.DB, boardID string) (*[]BoardColumn, error) {
+	var bc []BoardColumn
+
+	err := db.Find(&bc, "board_id = ?", boardID).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "GetBoardColumns",
+			"info":    "retrieving columns of specified board",
+			"boardID": boardID,
+		}).Error(err)
+		return nil, err
+	}
+
+	return &bc, nil
+}

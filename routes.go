@@ -59,6 +59,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 	teamMember.DELETE("/delete/board", server.deleteBoard) // Implementation Pending
 
 	teamMember.POST("/create/board/column", server.createBoardColumn)
+	teamMember.GET("/get/board/columns", server.getBoardColumns)
 
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)
