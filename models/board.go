@@ -115,6 +115,24 @@ func GetBoards(db *gorm.DB, args *GetBoardsArgs) (*[]Board, error) {
 	return &boards, nil
 }
 
+func CheckIfBoardPartOfTeam(db *gorm.DB, boardID, teamID string) bool {
+	board, err := getBoard(db, boardID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "CheckIfBoardPartOfTeam",
+			"subFunc": "getBoard",
+			"boardID": boardID,
+		}).Error(err)
+		return false
+	}
+
+	if board.TeamID != teamID {
+		return false
+	}
+
+	return true
+}
+
 func getBoard(db *gorm.DB, boardID string) (*Board, error) {
 	var board Board
 

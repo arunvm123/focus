@@ -58,10 +58,12 @@ func initialiseRoutes(server *server) *gin.Engine {
 	teamMember.POST("/update/board", server.updateBoard)
 	teamMember.DELETE("/delete/board", server.deleteBoard) // Implementation Pending
 
-	teamMember.POST("/create/board/column", server.createBoardColumn)
-	teamMember.GET("/get/board/columns", server.getBoardColumns)
-	teamMember.POST("/update/board/column", server.updateBoardColumn)
-	teamMember.DELETE("/delete/board/column", server.deleteBoardColumn)
+	board := r.Group("/")
+	board.Use(server.tokenAuthorisationMiddleware(), server.checkIfTeamMember(), server.checkIfBoardPartOfTeam())
+	board.POST("/create/board/column", server.createBoardColumn)
+	board.GET("/get/board/columns", server.getBoardColumns)
+	board.POST("/update/board/column", server.updateBoardColumn)
+	board.DELETE("/delete/board/column", server.deleteBoardColumn) // Implementation Pending
 
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)

@@ -31,6 +31,7 @@ func (server *server) updateBoardColumn(c *gin.Context) {
 		return
 	}
 
+	args.BoardID = c.GetString("boardID")
 	err = models.UpdateBoardColumn(server.db, &args)
 	if err != nil {
 		log.WithFields(log.Fields{

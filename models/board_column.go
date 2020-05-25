@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
@@ -21,11 +23,12 @@ func (bc *BoardColumn) Save(db *gorm.DB) error {
 }
 
 type CreateBoardColumnArgs struct {
-	BoardID string `json:"boardID" binding:"required"`
+	BoardID string `json:"boardID"`
 	Name    string `json:"name" binding:"required"`
 }
 
 type UpdateBoardColumnArgs struct {
+	BoardID  string  `json:"boardID"`
 	ColumnID string  `json:"ColumnID" binding:"required"`
 	Name     *string `json:"name"`
 }
@@ -76,6 +79,10 @@ func UpdateBoardColumn(db *gorm.DB, args *UpdateBoardColumnArgs) error {
 			"columnID": args.ColumnID,
 		}).Error(err)
 		return err
+	}
+
+	if column.BoardID != args.BoardID {
+		return errors.New("Column not part of specified board")
 	}
 
 	if args.Name != nil {

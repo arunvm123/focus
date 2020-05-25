@@ -157,6 +157,19 @@ func (server *server) checkIfTeamMember() gin.HandlerFunc {
 	}
 }
 
+func (server *server) checkIfBoardPartOfTeam() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if models.CheckIfBoardPartOfTeam(server.db, c.Query("boardID"), c.Query("teamID")) == false {
+			c.JSON(http.StatusUnauthorized, "Board not part of team")
+			c.Abort()
+			return
+		}
+
+		c.Keys["boardID"] = c.Query("boardID")
+		c.Next()
+	}
+}
+
 func (server *server) checkIfAdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, err := getUserFromContext(c)
