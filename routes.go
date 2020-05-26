@@ -65,6 +65,8 @@ func initialiseRoutes(server *server) *gin.Engine {
 	board.POST("/update/board/column", server.updateBoardColumn)
 	board.DELETE("/delete/board/column", server.deleteBoardColumn) // Implementation Pending
 
+	board.POST("/create/board/column/card", server.createColumnCard)
+
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)
 	private.POST("/update/password", server.updatePassword)
