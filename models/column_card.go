@@ -61,3 +61,19 @@ func CreateColumnCard(db *gorm.DB, args *CreateColumnCardArgs) error {
 
 	return nil
 }
+
+func GetColumnCards(db *gorm.DB, columnID string) (*[]ColumnCard, error) {
+	var cards []ColumnCard
+
+	err := db.Find(&cards, "column_id = ?", columnID).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":     "GetColumnCards",
+			"info":     "retrieving cards of the column",
+			"columnID": columnID,
+		}).Error(err)
+		return nil, err
+	}
+
+	return &cards, nil
+}

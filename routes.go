@@ -68,6 +68,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 	boardColumn := r.Group("/")
 	boardColumn.Use(server.tokenAuthorisationMiddleware(), server.checkIfTeamMember(), server.checkIfBoardPartOfTeam(), server.checkIfColumnPartOfBoard())
 	boardColumn.POST("/create/board/column/card", server.createColumnCard)
+	boardColumn.GET("/get/board/column/cards", server.getColumnCards)
 
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)
