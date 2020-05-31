@@ -112,23 +112,37 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 		return
 	}
 
+	personalTeamID, err := user.GetPersonalTeamID(tx)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "loginWithGoogle",
+			"subFunc": "user.GetPersonalTeamID",
+			"userID":  user.ID,
+		}).Error(err)
+		c.JSON(http.StatusInternalServerError, "Error while retrieving personal team id")
+		return
+
+	}
+
 	tx.Commit()
 	c.SetCookie("Authorization", signedToken, 0, "", "travail.in", false, false)
 
 	c.JSON(http.StatusOK, struct {
-		Token       string  `json:"token"`
-		Name        string  `json:"name"`
-		ID          int     `json:"id"`
-		Email       string  `json:"email"`
-		ProfilePic  *string `json:"profilePic"`
-		GoogleOauth bool    `json:"googleOauth"`
+		Token          string  `json:"token"`
+		Name           string  `json:"name"`
+		ID             int     `json:"id"`
+		Email          string  `json:"email"`
+		ProfilePic     *string `json:"profilePic"`
+		GoogleOauth    bool    `json:"googleOauth"`
+		PersonalTeamID string  `json:"personalTeamID"`
 	}{
-		Token:       signedToken,
-		Email:       user.Email,
-		ID:          user.ID,
-		Name:        user.Name,
-		ProfilePic:  user.ProfilePic,
-		GoogleOauth: user.GoogleOauth,
+		Token:          signedToken,
+		Email:          user.Email,
+		ID:             user.ID,
+		Name:           user.Name,
+		ProfilePic:     user.ProfilePic,
+		GoogleOauth:    user.GoogleOauth,
+		PersonalTeamID: personalTeamID,
 	})
 	return
 }

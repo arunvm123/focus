@@ -8,44 +8,42 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (server *server) getLists(c *gin.Context) {
+func (server *server) updateBoard(c *gin.Context) {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"func":    "getLists",
+			"func":    "updateBoard",
 			"subFunc": "getUserFromContext",
 		}).Error(err)
-		c.JSON(http.StatusInternalServerError, err)
+		c.JSON(http.StatusBadRequest, "Error fetching user")
 		return
 	}
 
-	var args models.GetListsArgs
+	var args models.UpdateBoardArgs
 	err = c.ShouldBindJSON(&args)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"func":    "getLists",
-			"subFunc": "c.ShouldBindJSON",
-			"userID":  user.ID,
+			"func":   "updateBoard",
+			"info":   "error decoding request body",
+			"userID": user.ID,
 		}).Error(err)
 		c.JSON(http.StatusBadRequest, "Request body not properly formatted")
 		return
 	}
 
-	lists, err := user.GetLists(server.db, &args)
+	args.TeamID = c.Keys["teamID"].(string)
+	err = user.UpdateBoard(server.db, &args)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"func":    "getLists",
-			"subFunc": "user.GetLists",
+			"func":    "updateBoard",
+			"subFunc": "user.UpdateBoardArgs",
 			"userID":  user.ID,
+			"args":    args,
 		}).Error(err)
-		c.JSON(http.StatusInternalServerError, "Error when retrieving lists")
+		c.JSON(http.StatusInternalServerError, "Error when updating board")
 		return
 	}
 
-	if len(*lists) != 0 {
-		(*lists)[0].Active = true
-	}
-
-	c.JSON(http.StatusOK, lists)
+	c.Status(http.StatusOK)
 	return
 }

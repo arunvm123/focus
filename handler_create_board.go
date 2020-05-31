@@ -8,22 +8,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (server *server) getLists(c *gin.Context) {
+func (server *server) createBoard(c *gin.Context) {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"func":    "getLists",
+			"func":    "createBoard",
 			"subFunc": "getUserFromContext",
 		}).Error(err)
-		c.JSON(http.StatusInternalServerError, err)
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	var args models.GetListsArgs
+	var args models.CreateBoardArgs
 	err = c.ShouldBindJSON(&args)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"func":    "getLists",
+			"func":    "createBoard",
 			"subFunc": "c.ShouldBindJSON",
 			"userID":  user.ID,
 		}).Error(err)
@@ -31,21 +31,19 @@ func (server *server) getLists(c *gin.Context) {
 		return
 	}
 
-	lists, err := user.GetLists(server.db, &args)
+	args.TeamID = c.Keys["teamID"].(string)
+	err = user.CreateBoard(server.db, &args)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"func":    "getLists",
-			"subFunc": "user.GetLists",
+			"func":    "createBoard",
+			"subFunc": "user.CreateBoard",
 			"userID":  user.ID,
+			"args":    args,
 		}).Error(err)
-		c.JSON(http.StatusInternalServerError, "Error when retrieving lists")
+		c.JSON(http.StatusInternalServerError, "Error when creating board")
 		return
 	}
 
-	if len(*lists) != 0 {
-		(*lists)[0].Active = true
-	}
-
-	c.JSON(http.StatusOK, lists)
+	c.Status(http.StatusOK)
 	return
 }
