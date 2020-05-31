@@ -70,6 +70,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 	boardColumn.POST("/create/board/column/card", server.createColumnCard)
 	boardColumn.GET("/get/board/column/cards", server.getColumnCards)
 	boardColumn.POST("/update/board/column/card", server.updateColumnCard)
+	boardColumn.DELETE("/delete/board/column/card", server.deleteColumnCard) // Implementation Pending
 
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)
