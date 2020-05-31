@@ -53,6 +53,25 @@ func initialiseRoutes(server *server) *gin.Engine {
 	teamMember.Use(server.tokenAuthorisationMiddleware(), server.checkIfTeamMember())
 	teamMember.GET("/get/team/members", server.getTeamMembers)
 
+	teamMember.POST("/create/board", server.createBoard)
+	teamMember.POST("/get/boards", server.getBoards)
+	teamMember.POST("/update/board", server.updateBoard)
+	teamMember.DELETE("/delete/board", server.deleteBoard) // Implementation Pending
+
+	board := r.Group("/")
+	board.Use(server.tokenAuthorisationMiddleware(), server.checkIfTeamMember(), server.checkIfBoardPartOfTeam())
+	board.POST("/create/board/column", server.createBoardColumn)
+	board.GET("/get/board/columns", server.getBoardColumns)
+	board.POST("/update/board/column", server.updateBoardColumn)
+	board.DELETE("/delete/board/column", server.deleteBoardColumn) // Implementation Pending
+
+	boardColumn := r.Group("/")
+	boardColumn.Use(server.tokenAuthorisationMiddleware(), server.checkIfTeamMember(), server.checkIfBoardPartOfTeam(), server.checkIfColumnPartOfBoard())
+	boardColumn.POST("/create/board/column/card", server.createColumnCard)
+	boardColumn.GET("/get/board/column/cards", server.getColumnCards)
+	boardColumn.POST("/update/board/column/card", server.updateColumnCard)
+	boardColumn.DELETE("/delete/board/column/card", server.deleteColumnCard) // Implementation Pending
+
 	private.GET("/get/profile", server.getProfile)
 	private.POST("/update/profile", server.updateProfile)
 	private.POST("/update/password", server.updatePassword)
