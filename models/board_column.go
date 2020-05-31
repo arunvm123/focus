@@ -102,6 +102,24 @@ func UpdateBoardColumn(db *gorm.DB, args *UpdateBoardColumnArgs) error {
 	return nil
 }
 
+func CheckIfColumnPartOfBoard(db *gorm.DB, boardColumnID string, boardID string) bool {
+	boardColumn, err := getBoardColumn(db, boardColumnID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":         "CheckIfColumnPartOfBoard",
+			"subFunc":      "getBoardColumn",
+			"boardColunID": boardColumnID,
+		}).Error(err)
+		return false
+	}
+
+	if boardColumn.BoardID != boardID {
+		return false
+	}
+
+	return true
+}
+
 func getBoardColumn(db *gorm.DB, columnID string) (*BoardColumn, error) {
 	var column BoardColumn
 

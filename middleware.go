@@ -170,6 +170,19 @@ func (server *server) checkIfBoardPartOfTeam() gin.HandlerFunc {
 	}
 }
 
+func (server *server) checkIfColumnPartOfBoard() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if models.CheckIfColumnPartOfBoard(server.db, c.Query("boardColumnID"), c.Query("boardID")) == false {
+			c.JSON(http.StatusUnauthorized, "Board column not of specified board")
+			c.Abort()
+			return
+		}
+
+		c.Keys["boardColumnID"] = c.Query("boardColumnID")
+		c.Next()
+	}
+}
+
 func (server *server) checkIfAdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, err := getUserFromContext(c)

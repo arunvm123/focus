@@ -31,6 +31,7 @@ func (server *server) createColumnCard(c *gin.Context) {
 		return
 	}
 
+	args.ColumnID = c.GetString("boardColumnID")
 	err = models.CreateColumnCard(server.db, &args)
 	if err != nil {
 		log.WithFields(log.Fields{
