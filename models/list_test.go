@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"testing"
 	"time"
 
@@ -10,36 +11,83 @@ import (
 	"gopkg.in/go-playground/assert.v1"
 )
 
-func TestGetList(t *testing.T) {
+func setup() (*gorm.DB, sqlmock.Sqlmock, *sql.DB, error) {
 	mockdb, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("Error initialising sql mock: %v", err)
+		return nil, nil, nil, err
 	}
-	defer mockdb.Close()
 
 	db, err := gorm.Open("mysql", mockdb)
 	if err != nil {
-		t.Fatalf("Error initialising gorm mock db: %v", err)
+		return nil, nil, nil, err
 	}
 
+	return db, mock, mockdb, err
+}
+
+func TestGetList(t *testing.T) {
 	row1 := List{
 		Heading:   "Heading1",
 		Archived:  false,
 		CreatedAt: time.Now().Unix(),
-		ID:        uuid.New().String(),
+		ID:        "935b639e-2fc9-473d-a2fc-6ecf9562f444",
 		TeamID:    uuid.New().String(),
 		UserID:    1,
 	}
 
-	rows := mock.NewRows([]string{"id", "user_id", "team_id", "heading", "created_at", "archived"}).
-		AddRow(row1.ID, row1.UserID, row1.TeamID, row1.Heading, row1.CreatedAt, row1.Archived)
-
-	mock.ExpectQuery("SELECT * FROM `lists` WHERE (archived = false AND id = $2)").WithArgs(row1.ID).WillReturnRows(rows)
-
-	list, err := getList(db, row1.ID)
+	db, mock, mockdb, err := setup()
 	if err != nil {
-		t.Fatalf("Error when retrieving list: %v", err)
+		t.Errorf("Error initialising mock DB; %v", err)
+	}
+	defer mockdb.Close()
+
+	tables := []struct {
+		name   string
+		data   *List
+		input  string
+		output *List
+		err    error
+	}{
+		{
+			name:   "List present",
+			data:   &row1,
+			input:  row1.ID,
+			output: &row1,
+			err:    nil,
+		},
+		{
+			name:   "List absent",
+			data:   nil,
+			input:  uuid.New().String(),
+			output: nil,
+			err:    gorm.ErrRecordNotFound,
+		},
 	}
 
-	assert.Equal(t, row1, list)
+	for _, tt := range tables {
+		t.Run(tt.name, func(t *testing.T) {
+			query := mock.ExpectQuery(".*")
+
+			if tt.data != nil {
+				rows := mock.NewRows([]string{"id", "user_id", "team_id", "heading", "created_at", "archived"}).
+					AddRow(tt.data.ID, tt.data.UserID, tt.data.TeamID, tt.data.Heading, tt.data.CreatedAt, tt.data.Archived)
+
+				query.WillReturnRows(rows)
+			} else {
+				query.WillReturnError(tt.err)
+			}
+
+			list, err := getList(db, tt.input)
+			if err != nil {
+				if err != tt.err {
+					t.Errorf("wrong error behavior %v, wantErr %v", err, tt.err)
+				}
+			}
+
+			if err == nil {
+				assert.Equal(t, tt.output, list)
+			}
+		})
+	}
+
 }
