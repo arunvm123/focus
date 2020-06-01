@@ -9,6 +9,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	userNotAdminOfTeam = errors.New("User not admin of team")
+)
+
 // List model
 type List struct {
 	ID        string `json:"id" gorm:"primary_key"`
@@ -82,7 +86,7 @@ func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) (*List, error) {
 	}
 
 	if team.AdminID != user.ID {
-		return nil, errors.New("User not admin of team")
+		return nil, userNotAdminOfTeam
 	}
 
 	list := List{

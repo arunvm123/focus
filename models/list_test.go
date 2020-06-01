@@ -2,6 +2,8 @@ package models
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"regexp"
 	"testing"
 	"time"
 
@@ -49,14 +51,14 @@ func TestGetList(t *testing.T) {
 		err    error
 	}{
 		{
-			name:   "List present",
+			name:   "list present",
 			data:   &row1,
 			input:  row1.ID,
 			output: &row1,
 			err:    nil,
 		},
 		{
-			name:   "List absent",
+			name:   "list absent",
 			data:   nil,
 			input:  uuid.New().String(),
 			output: nil,
@@ -87,6 +89,115 @@ func TestGetList(t *testing.T) {
 			if err == nil {
 				assert.Equal(t, tt.output, list)
 			}
+		})
+	}
+
+}
+
+func TestCreateList(t *testing.T) {
+	user := &User{
+		ID:          1,
+		Email:       "random@rhyta.com",
+		GoogleOauth: false,
+		Name:        "John Doe",
+		Password:    "",
+		Verified:    true,
+	}
+
+	teamID := uuid.New().String()
+
+	tables := []struct {
+		name             string
+		user             *User
+		team             *Team
+		args             CreateListArgs
+		err              error
+		shouldCreateList bool
+	}{
+		{
+			name: "successful list creation",
+			args: CreateListArgs{
+				Heading: "Heading",
+				TeamID:  teamID,
+			},
+			err: nil,
+			team: &Team{
+				ID:             teamID,
+				AdminID:        user.ID,
+				Archived:       false,
+				CreatedAt:      time.Now().Unix(),
+				Name:           "Test Team",
+				OrganisationID: uuid.New().String(),
+			},
+			user:             user,
+			shouldCreateList: true,
+		},
+		{
+			name: "user not admin",
+			user: user,
+			team: &Team{
+				ID:             teamID,
+				AdminID:        2, // AdminID value is different from user id
+				Archived:       false,
+				CreatedAt:      time.Now().Unix(),
+				Name:           "Another Test Team",
+				OrganisationID: uuid.New().String(),
+			},
+			args: CreateListArgs{
+				Heading: "Heading",
+				TeamID:  teamID,
+			},
+			err:              userNotAdminOfTeam,
+			shouldCreateList: false,
+		},
+		{
+			name: "team does not exist",
+			user: user,
+			team: nil,
+			args: CreateListArgs{
+				Heading: "Heading",
+				TeamID:  uuid.New().String(),
+			},
+			err:              gorm.ErrRecordNotFound,
+			shouldCreateList: false,
+		},
+	}
+
+	db, mock, mockdb, err := setup()
+	if err != nil {
+		t.Errorf("Error initialising mock DB; %v", err)
+	}
+	defer mockdb.Close()
+
+	for _, tt := range tables {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.team != nil {
+				teamRows := mock.NewRows([]string{"id", "organisation_id", "admin_id", "name", "description", "created_at", "archived"}).
+					AddRow(tt.team.ID, tt.team.OrganisationID, tt.team.AdminID, tt.team.Name, tt.team.Description, tt.team.CreatedAt, tt.team.Archived)
+
+				mock.ExpectQuery(".*").WithArgs(tt.args.TeamID).WillReturnRows(teamRows)
+			} else {
+				mock.ExpectQuery(".*").WillReturnError(gorm.ErrRecordNotFound)
+			}
+
+			if tt.shouldCreateList {
+				mock.ExpectBegin()
+				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `lists`")).WithArgs(sqlmock.AnyArg(), tt.user.ID, tt.args.TeamID, tt.args.Heading, sqlmock.AnyArg(), false).
+					WillReturnResult(driver.ResultNoRows)
+				mock.ExpectCommit()
+			}
+
+			_, err = user.CreateList(db, &tt.args)
+			if err != nil {
+				if err != tt.err {
+					t.Errorf("wrong error behavior %v, wantErr %v", err, tt.err)
+				}
+			}
+
+			if err == nil {
+				assert.Equal(t, tt.err, err)
+			}
+
 		})
 	}
 
