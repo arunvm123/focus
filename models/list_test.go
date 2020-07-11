@@ -202,3 +202,100 @@ func TestCreateList(t *testing.T) {
 	}
 
 }
+
+func TestUpdateList(t *testing.T) {
+	db, mock, mockdb, err := setup()
+	if err != nil {
+		t.Errorf("Error initialising mock DB; %v", err)
+	}
+	defer mockdb.Close()
+
+	row1 := List{
+		Heading:   "Heading1",
+		Archived:  false,
+		CreatedAt: time.Now().Unix(),
+		ID:        "935b639e-2fc9-473d-a2fc-6ecf9562f444",
+		TeamID:    uuid.New().String(),
+		UserID:    1,
+	}
+
+	heading := "heading"
+	archived := false
+	args := &UpdateListArgs{
+		Heading:  &heading,
+		Archived: &archived,
+		ID:       row1.ID,
+	}
+
+	tables := []struct {
+		name             string
+		user             *User
+		list             *List
+		args             *UpdateListArgs
+		err              error
+		shouldUpdateList bool
+	}{
+		{
+			name:             "update list successfully",
+			list:             &row1,
+			args:             args,
+			err:              nil,
+			shouldUpdateList: true,
+			user:             getUser(),
+		},
+		{
+			name:             "list does not exist",
+			list:             nil,
+			args:             args,
+			err:              gorm.ErrRecordNotFound,
+			shouldUpdateList: false,
+			user:             getUser(),
+		},
+	}
+
+	for _, tt := range tables {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.list != nil {
+				rows := mock.NewRows([]string{"id", "user_id", "team_id", "heading", "created_at", "archived"}).
+					AddRow(tt.list.ID, tt.list.UserID, tt.list.TeamID, tt.list.Heading, tt.list.CreatedAt, tt.list.Archived)
+
+				mock.ExpectQuery(".*").WillReturnRows(rows)
+			} else {
+				mock.ExpectQuery(".*").WillReturnError(gorm.ErrRecordNotFound)
+			}
+
+			if tt.shouldUpdateList {
+				mock.ExpectBegin()
+				mock.ExpectExec(regexp.QuoteMeta("UPDATE `lists` SET")).
+					WithArgs(tt.list.UserID, tt.list.TeamID, tt.args.Heading, tt.list.CreatedAt, tt.args.Archived, tt.args.ID).WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectCommit()
+			}
+
+			err = tt.user.UpdateList(db, args)
+			if err != nil {
+				if err != tt.err {
+					t.Errorf("wrong error behavior %v, wantErr %v", err, tt.err)
+				}
+			}
+
+			if err == nil {
+				assert.Equal(t, tt.err, err)
+			}
+
+		})
+	}
+
+}
+
+func getUser() *User {
+	user := &User{
+		ID:          1,
+		Email:       "johnDoe@rhyta.com",
+		GoogleOauth: false,
+		Name:        "John Doe",
+		Password:    "",
+		Verified:    true,
+	}
+
+	return user
+}
