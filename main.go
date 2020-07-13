@@ -11,20 +11,21 @@ import (
 	"google.golang.org/api/option"
 
 	"github.com/arunvm/travail-backend/config"
+	"github.com/arunvm/travail-backend/email"
+	"github.com/arunvm/travail-backend/email/sendgrid"
 
 	"github.com/arunvm/travail-backend/models"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
-	"github.com/sendgrid/sendgrid-go"
 	log "github.com/sirupsen/logrus"
 )
 
 type server struct {
 	db         *gorm.DB
 	routes     *gin.Engine
-	email      *sendgrid.Client
+	email      email.Email
 	pushClient *messaging.Client
 }
 
@@ -59,7 +60,7 @@ func main() {
 	models.MigrateDB(server.db)
 
 	// email client
-	server.email = sendgrid.NewSendClient(config.SendgridKey)
+	server.email = sendgrid.New(config.SendgridKey)
 
 	// FCM push notification
 	firebaseApp, err := firebase.NewApp(context.Background(), nil, option.WithCredentialsFile(config.FCMServiceAccountKeyPath))

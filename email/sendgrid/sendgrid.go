@@ -1,4 +1,4 @@
-package emails
+package sendgrid
 
 import (
 	"github.com/arunvm/travail-backend/config"
@@ -15,7 +15,19 @@ const (
 	organisationInvite string = "d-fafbec3bf89944f5ba7f991ca19d81ab"
 )
 
-func SendValidationEmail(emailClient *sendgrid.Client, user *models.User, token string) error {
+type Sendgrid struct {
+	Client *sendgrid.Client
+}
+
+func New(sendgridKey string) *Sendgrid {
+	client := sendgrid.NewSendClient(sendgridKey)
+
+	return &Sendgrid{
+		Client: client,
+	}
+}
+
+func (sendgrid *Sendgrid) SendValidationEmail(user *models.User, token string) error {
 	to := []*mail.Email{}
 	to = append(to, &mail.Email{
 		Name:    user.Name,
@@ -32,13 +44,13 @@ func SendValidationEmail(emailClient *sendgrid.Client, user *models.User, token 
 		return err
 	}
 
-	return sendEmail(emailClient, to, map[string]interface{}{
+	return sendEmail(sendgrid.Client, to, map[string]interface{}{
 		"name":            user.Name,
 		"validation_link": c.DomainURL + "verify/module?token=" + token,
 	}, emailValidation)
 }
 
-func SendForgotPasswordEmail(emailClient *sendgrid.Client, user *models.User, token string) error {
+func (sendgrid *Sendgrid) SendForgotPasswordEmail(user *models.User, token string) error {
 	to := []*mail.Email{}
 	to = append(to, &mail.Email{
 		Name:    user.Name,
@@ -55,13 +67,13 @@ func SendForgotPasswordEmail(emailClient *sendgrid.Client, user *models.User, to
 		return err
 	}
 
-	return sendEmail(emailClient, to, map[string]interface{}{
+	return sendEmail(sendgrid.Client, to, map[string]interface{}{
 		"name": user.Name,
 		"link": c.DomainURL + "forgot/module?token=" + token,
 	}, forgotPassword)
 }
 
-func SendOrganisationInvite(emailClient *sendgrid.Client, db *gorm.DB, adminName string, invite *models.OrganisationInvitation) error {
+func (sendgrid *Sendgrid) SendOrganisationInvite(db *gorm.DB, adminName string, invite *models.OrganisationInvitation) error {
 	to := []*mail.Email{}
 	to = append(to, &mail.Email{
 		Address: invite.Email,
@@ -89,7 +101,7 @@ func SendOrganisationInvite(emailClient *sendgrid.Client, db *gorm.DB, adminName
 		return err
 	}
 
-	return sendEmail(emailClient, to, map[string]interface{}{
+	return sendEmail(sendgrid.Client, to, map[string]interface{}{
 		"admin_name":        adminName,
 		"organisation_name": orgName,
 		"invite_link":       c.DomainURL + "organisation/invite/accept?token=" + invite.Token,

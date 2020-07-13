@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 
-	"github.com/arunvm/travail-backend/emails"
 	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -53,7 +52,7 @@ func (server *server) inviteToOrganisation(c *gin.Context) {
 		return
 	}
 
-	err = emails.SendOrganisationInvite(server.email, tx, admin.Name, invite)
+	err = server.email.SendOrganisationInvite(tx, admin.Name, invite)
 	if err != nil {
 		tx.Rollback()
 		log.WithFields(log.Fields{

@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 
-	"github.com/arunvm/travail-backend/emails"
 	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -54,7 +53,7 @@ func (server *server) forgotPassword(c *gin.Context) {
 		return
 	}
 
-	err = emails.SendForgotPasswordEmail(server.email, user, token)
+	err = server.email.SendForgotPasswordEmail(user, token)
 	if err != nil {
 		tx.Rollback()
 		log.WithFields(log.Fields{
