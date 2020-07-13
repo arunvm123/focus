@@ -14,7 +14,6 @@ import (
 
 	"github.com/arunvm/travail-backend/models"
 
-	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
@@ -22,7 +21,7 @@ import (
 
 type server struct {
 	db     *gorm.DB
-	routes *gin.Engine
+	routes http.Handler
 	email  email.Email
 	push   push.Notification
 }
