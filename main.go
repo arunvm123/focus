@@ -1,18 +1,16 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"net/http"
 
-	firebase "firebase.google.com/go"
-	"firebase.google.com/go/messaging"
 	"github.com/rs/cors"
-	"google.golang.org/api/option"
 
 	"github.com/arunvm/travail-backend/config"
 	"github.com/arunvm/travail-backend/email"
 	"github.com/arunvm/travail-backend/email/sendgrid"
+	push "github.com/arunvm/travail-backend/push_notification"
+	"github.com/arunvm/travail-backend/push_notification/fcm"
 
 	"github.com/arunvm/travail-backend/models"
 
@@ -23,10 +21,10 @@ import (
 )
 
 type server struct {
-	db         *gorm.DB
-	routes     *gin.Engine
-	email      email.Email
-	pushClient *messaging.Client
+	db     *gorm.DB
+	routes *gin.Engine
+	email  email.Email
+	push   push.Notification
 }
 
 func newServer() *server {
@@ -62,15 +60,9 @@ func main() {
 	// email client
 	server.email = sendgrid.New(config.SendgridKey)
 
-	// FCM push notification
-	firebaseApp, err := firebase.NewApp(context.Background(), nil, option.WithCredentialsFile(config.FCMServiceAccountKeyPath))
+	server.push, err = fcm.New(config.FCMServiceAccountKeyPath)
 	if err != nil {
-		log.Fatalf("error when initialising firebase app\n%v", err)
-	}
-
-	server.pushClient, err = firebaseApp.Messaging(context.Background())
-	if err != nil {
-		log.Fatalf("error when initialising FCM push notification client\n%v", err)
+		log.Fatalf("error retrieving client for push notification\n%v", err)
 	}
 
 	err = server.startCronJobs()

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"firebase.google.com/go/messaging"
 	push "github.com/arunvm/travail-backend/push_notification"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
@@ -299,7 +298,7 @@ func getTaskOfUser(db *gorm.DB, userID int, taskID string) (*Task, error) {
 	return &task, nil
 }
 
-func SendPushNotificationForTasksAboutToExpire(db *gorm.DB, pushClient *messaging.Client) error {
+func SendPushNotificationForTasksAboutToExpire(db *gorm.DB, pushClient push.Notification) error {
 	startTime := time.Now().Unix()
 	endTime := startTime + (5 * 60)
 
@@ -337,7 +336,7 @@ func SendPushNotificationForTasksAboutToExpire(db *gorm.DB, pushClient *messagin
 				return
 			}
 
-			err = push.SendPushNotification(pushClient, deviceTokens, &push.Payload{
+			err = pushClient.SendPushNotification(deviceTokens, &push.Payload{
 				Body:  "'" + tasks[i].Info + "' is due soon",
 				Title: tasks[i].Heading,
 				Data: map[string]string{

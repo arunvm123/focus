@@ -1,20 +1,36 @@
-package push
+package fcm
 
 import (
 	"context"
 	"log"
 
+	firebase "firebase.google.com/go"
 	"firebase.google.com/go/messaging"
+	push "github.com/arunvm/travail-backend/push_notification"
+	"google.golang.org/api/option"
 )
 
-type Payload struct {
-	Title       string            `json:"title"`
-	Body        string            `json:"body"`
-	Data        map[string]string `json:"data"`
-	ClickAction string            `json:"clickAction"`
+type FCM struct {
+	Client *messaging.Client
 }
 
-func SendPushNotification(client *messaging.Client, registrationTokens []string, payload *Payload) error {
+func New(serviceAccountKeyPath string) (*FCM, error) {
+	firebaseApp, err := firebase.NewApp(context.Background(), nil, option.WithCredentialsFile(serviceAccountKeyPath))
+	if err != nil {
+		return nil, err
+	}
+
+	var fcm FCM
+
+	fcm.Client, err = firebaseApp.Messaging(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	return &fcm, nil
+}
+
+func (fcm *FCM) SendPushNotification(registrationTokens []string, payload *push.Payload) error {
 	notification := &messaging.MulticastMessage{
 		Notification: &messaging.Notification{
 			Title:    payload.Title,
@@ -44,7 +60,7 @@ func SendPushNotification(client *messaging.Client, registrationTokens []string,
 		Tokens: registrationTokens,
 	}
 
-	_, err := client.SendMulticast(context.Background(), notification)
+	_, err := fcm.Client.SendMulticast(context.Background(), notification)
 	if err != nil {
 		log.Fatalln(err)
 		return err

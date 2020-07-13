@@ -26,7 +26,7 @@ func (server *server) startCronJobs() error {
 }
 
 func (server *server) notificationForTasksAboutToExpire() {
-	err := models.SendPushNotificationForTasksAboutToExpire(server.db, server.pushClient)
+	err := models.SendPushNotificationForTasksAboutToExpire(server.db, server.push)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "sendPushNotificationForTasksAboutToExpire",
