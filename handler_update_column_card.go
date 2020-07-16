@@ -32,7 +32,7 @@ func (server *server) updateColumnCard(c *gin.Context) {
 	}
 
 	args.ColumnID = c.GetString("boardColumnID")
-	err = user.UpdateColumnCard(server.db, &args)
+	err = server.db.UpdateColumnCard(&args, user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "updateColumnCard",

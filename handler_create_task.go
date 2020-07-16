@@ -32,7 +32,7 @@ func (server *server) createTask(c *gin.Context) {
 		return
 	}
 
-	task, err := user.CreateTask(server.db, &args)
+	task, err := server.db.CreateTask(&args, user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "createTask",

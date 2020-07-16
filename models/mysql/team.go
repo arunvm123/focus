@@ -1,47 +1,18 @@
-package models
+package mysql
 
 import (
 	"time"
 
+	"github.com/arunvm/travail-backend/models"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
 
-type Team struct {
-	ID             string  `json:"id" gorm:"primary_key;auto_increment:false"`
-	OrganisationID string  `json:"organisationID"`
-	AdminID        int     `json:"adminID"`
-	Name           string  `json:"name"`
-	Description    *string `json:"description" gorm:"size:3000"`
-	CreatedAt      int64   `json:"createdAt"`
-	Archived       bool    `json:"archived"`
-}
+func (db *Mysql) CreateTeam(args *models.CreateTeamArgs, user *models.User) error {
+	tx := db.Client.Begin()
 
-// Create is a helper function to create a new organisation
-func (team *Team) Create(db *gorm.DB) error {
-	return db.Create(&team).Error
-}
-
-// Save is a helper function to update existing organisation
-func (team *Team) Save(db *gorm.DB) error {
-	return db.Save(&team).Error
-}
-
-type CreateTeamArgs struct {
-	OrganisationID string  `json:"-"`
-	Name           string  `json:"name" binding:"required"`
-	Description    *string `json:"description"`
-}
-
-type UpdateTeamArgs struct {
-	TeamID      string  `json:"-"`
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-}
-
-func (user *User) CreateTeam(db *gorm.DB, args *CreateTeamArgs) error {
-	team := Team{
+	team := models.Team{
 		ID:             uuid.New().String(),
 		AdminID:        user.ID,
 		Archived:       false,
@@ -51,8 +22,9 @@ func (user *User) CreateTeam(db *gorm.DB, args *CreateTeamArgs) error {
 		Description:    args.Description,
 	}
 
-	err := team.Create(db)
+	err := tx.Create(team).Error
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "CreateTeam",
 			"subFunc": "team.Create",
@@ -62,8 +34,9 @@ func (user *User) CreateTeam(db *gorm.DB, args *CreateTeamArgs) error {
 		return err
 	}
 
-	err = addUserToTeam(db, user.ID, team.ID)
+	err = addUserToTeam(tx, user.ID, team.ID)
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "CreateTeam",
 			"subFunc": "addUserToTeam",
@@ -73,11 +46,12 @@ func (user *User) CreateTeam(db *gorm.DB, args *CreateTeamArgs) error {
 		return err
 	}
 
+	tx.Commit()
 	return nil
 }
 
-func (teamAdmin *User) UpdateTeam(db *gorm.DB, args *UpdateTeamArgs) error {
-	team, err := getTeamFromID(db, args.TeamID)
+func (db *Mysql) UpdateTeam(args *models.UpdateTeamArgs, teamAdmin *models.User) error {
+	team, err := db.getTeamFromID(args.TeamID)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":        "UpdateTeam",
@@ -95,7 +69,7 @@ func (teamAdmin *User) UpdateTeam(db *gorm.DB, args *UpdateTeamArgs) error {
 		team.Name = *args.Name
 	}
 
-	err = team.Save(db)
+	err = db.Client.Save(team).Error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":        "UpdateTeam",
@@ -109,17 +83,17 @@ func (teamAdmin *User) UpdateTeam(db *gorm.DB, args *UpdateTeamArgs) error {
 	return nil
 }
 
-func (user *User) createPersonalTeam(db *gorm.DB, org *Organisation) error {
-	team := Team{
+func createPersonalTeam(db *gorm.DB, org *models.Organisation, user *models.User) error {
+	team := models.Team{
 		ID:             uuid.New().String(),
 		AdminID:        user.ID,
 		Archived:       false,
 		CreatedAt:      time.Now().Unix(),
-		Name:           PersonalString,
+		Name:           models.PersonalString,
 		OrganisationID: org.ID,
 	}
 
-	err := team.Create(db)
+	err := db.Create(team).Error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "createPersonalTeam",
@@ -142,11 +116,11 @@ func (user *User) createPersonalTeam(db *gorm.DB, org *Organisation) error {
 	return nil
 }
 
-func (user *User) GetPersonalTeamID(db *gorm.DB) (string, error) {
-	var team Team
+func (db *Mysql) GetPersonalTeamID(user *models.User) (string, error) {
+	var team models.Team
 
-	err := db.Table("organisations").Joins("JOIN teams on organisations.id = teams.organisation_id").
-		Where("organisations.admin_id = ? AND type = ?", user.ID, Personal).Select("teams.*").
+	err := db.Client.Table("organisations").Joins("JOIN teams on organisations.id = teams.organisation_id").
+		Where("organisations.admin_id = ? AND type = ?", user.ID, models.Personal).Select("teams.*").
 		Find(&team).Error
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -159,10 +133,10 @@ func (user *User) GetPersonalTeamID(db *gorm.DB) (string, error) {
 	return team.ID, nil
 }
 
-func getTeamFromID(db *gorm.DB, teamID string) (*Team, error) {
-	var team Team
+func (db *Mysql) getTeamFromID(teamID string) (*models.Team, error) {
+	var team models.Team
 
-	err := db.Find(&team, "id = ? AND archived = false", teamID).Error
+	err := db.Client.Find(&team, "id = ? AND archived = false", teamID).Error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":   "getTeamFromID",
@@ -175,11 +149,11 @@ func getTeamFromID(db *gorm.DB, teamID string) (*Team, error) {
 	return &team, nil
 }
 
-func (user *User) CheckIfTeamAdmin(db *gorm.DB, teamID string) bool {
+func (db *Mysql) CheckIfTeamAdmin(teamID string, user *models.User) bool {
 	var count int
 
-	err := db.Table("teams").Joins("JOIN organisations on teams.organisation_id = organisations.id").
-		Where("teams.id = ? AND teams.archived = false AND teams.admin_id = ? AND organisations.type = ?", teamID, user.ID, Organistation).Count(&count).Error
+	err := db.Client.Table("teams").Joins("JOIN organisations on teams.organisation_id = organisations.id").
+		Where("teams.id = ? AND teams.archived = false AND teams.admin_id = ? AND organisations.type = ?", teamID, user.ID, models.Organistation).Count(&count).Error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":   "checkIfTeamAdmin",

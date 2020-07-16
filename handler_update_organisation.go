@@ -32,7 +32,7 @@ func (server *server) updateOrganisation(c *gin.Context) {
 	}
 
 	args.ID = c.Keys["organisationID"].(string)
-	err = admin.UpdateOrganisation(server.db, &args)
+	err = server.db.UpdateOrganisation(&args, admin)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "updateOrganisation",

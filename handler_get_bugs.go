@@ -18,7 +18,7 @@ func (server *server) getBugs(c *gin.Context) {
 		return
 	}
 
-	bugs, err := admin.GetBugs(server.db)
+	bugs, err := server.db.GetBugs()
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "createBug",

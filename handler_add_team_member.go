@@ -32,7 +32,7 @@ func (server *server) addTeamMember(c *gin.Context) {
 	}
 
 	args.TeamID = c.Keys["teamID"].(string)
-	err = teamAdmin.AddTeamMember(server.db, args)
+	err = server.db.AddTeamMember(args)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":        "addTeamMember",

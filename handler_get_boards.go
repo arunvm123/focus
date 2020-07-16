@@ -12,7 +12,7 @@ func (server *server) getBoards(c *gin.Context) {
 	var args models.GetBoardsArgs
 	args.TeamID = c.Keys["teamID"].(string)
 
-	boards, err := models.GetBoards(server.db, &args)
+	boards, err := server.db.GetBoards(&args)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "getBoards",

@@ -31,7 +31,7 @@ func (server *server) getLists(c *gin.Context) {
 		return
 	}
 
-	lists, err := user.GetLists(server.db, &args)
+	lists, err := server.db.GetLists(&args, user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "getLists",

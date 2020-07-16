@@ -32,7 +32,7 @@ func (server *server) addNotificationToken(c *gin.Context) {
 		return
 	}
 
-	err = user.AddNotificationToken(server.db, &args)
+	err = server.db.AddNotificationToken(&args, user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "addNotificationToken",

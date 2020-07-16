@@ -31,10 +31,8 @@ func (server *server) acceptOrganisationInvite(c *gin.Context) {
 		return
 	}
 
-	tx := server.db.Begin()
-	err = user.AcceptOrganisationInvite(tx, &args)
+	err = server.db.AcceptOrganisationInvite(&args, user)
 	if err != nil {
-		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "acceptOrganisationInvite",
 			"subFunc": "user.AcceptOrganisationInvite",
@@ -44,7 +42,6 @@ func (server *server) acceptOrganisationInvite(c *gin.Context) {
 		return
 	}
 
-	tx.Commit()
 	c.Status(http.StatusOK)
 	return
 }

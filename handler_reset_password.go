@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 
-	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
@@ -24,10 +23,8 @@ func (server *server) resetPassword(c *gin.Context) {
 		return
 	}
 
-	tx := server.db.Begin()
-	err = models.ResetPassword(tx, args.Token, args.Password)
+	err = server.db.ResetPassword(args.Token, args.Password)
 	if err != nil {
-		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "resetPassword",
 			"subFunc": "models.UpdatePassword",
@@ -36,7 +33,6 @@ func (server *server) resetPassword(c *gin.Context) {
 		return
 	}
 
-	tx.Commit()
 	c.Status(http.StatusOK)
 	return
 }

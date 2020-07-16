@@ -26,7 +26,7 @@ func (server *server) login(c *gin.Context) {
 		return
 	}
 
-	user, err := models.GetUserFromEmail(server.db, loginData.Email)
+	user, err := server.db.GetUserFromEmail(loginData.Email)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusUnauthorized, "User does not exist, Please sign up")
@@ -68,7 +68,7 @@ func (server *server) login(c *gin.Context) {
 		return
 	}
 
-	personalTeam, err := user.GetPersonalTeamID(server.db)
+	personalTeam, err := server.db.GetPersonalTeamID(user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "login",

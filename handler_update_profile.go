@@ -31,7 +31,7 @@ func (server *server) updateProfile(c *gin.Context) {
 		return
 	}
 
-	err = user.UpdateProfile(server.db, args)
+	err = server.db.UpdateProfile(args, user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "updateProfile",

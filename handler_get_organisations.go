@@ -18,7 +18,7 @@ func (server *server) getOrganisations(c *gin.Context) {
 		return
 	}
 
-	organisations, err := user.GetOrganisations(server.db)
+	organisations, err := server.db.GetOrganisations(user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "getOrganisations",

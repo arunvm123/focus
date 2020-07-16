@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/arunvm/travail-backend/models"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/robfig/cron/v3"
@@ -26,7 +25,7 @@ func (server *server) startCronJobs() error {
 }
 
 func (server *server) notificationForTasksAboutToExpire() {
-	err := models.SendPushNotificationForTasksAboutToExpire(server.db, server.push)
+	err := server.db.SendPushNotificationForTasksAboutToExpire(server.push)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "sendPushNotificationForTasksAboutToExpire",

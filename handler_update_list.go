@@ -31,7 +31,7 @@ func (server *server) updateList(c *gin.Context) {
 		return
 	}
 
-	err = user.UpdateList(server.db, &args)
+	err = server.db.UpdateList(&args, user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "updateList",

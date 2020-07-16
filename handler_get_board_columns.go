@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 
-	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
@@ -20,7 +19,7 @@ func (server *server) getBoardColumns(c *gin.Context) {
 	}
 
 	boardID := c.Query("boardID")
-	columns, err := models.GetBoardColumns(server.db, boardID)
+	columns, err := server.db.GetBoardColumns(boardID)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "getBoardColumns",

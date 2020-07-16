@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 
-	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
@@ -24,7 +23,7 @@ func (server *server) resendVerifyEmail(c *gin.Context) {
 		return
 	}
 
-	user, err := models.GetUserFromEmail(server.db, args.Email)
+	user, err := server.db.GetUserFromEmail(args.Email)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusUnauthorized, "Please sign up")
@@ -44,22 +43,8 @@ func (server *server) resendVerifyEmail(c *gin.Context) {
 		return
 	}
 
-	tx := server.db.Begin()
-	err = models.InvalidateEmailTokens(tx, user.ID)
+	err = server.db.CreateEmailValidationToken(user, server.email)
 	if err != nil {
-		tx.Rollback()
-		log.WithFields(log.Fields{
-			"func":    "resendVerifyEmail",
-			"subFunc": "models.InvalidateEmailTokens",
-			"userID":  user.ID,
-		}).Error(err)
-		c.JSON(http.StatusInternalServerError, "error while invalidating previous tokens")
-		return
-	}
-
-	token, err := models.CreateEmailValidationToken(tx, user)
-	if err != nil {
-		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "resendVerifyEmail",
 			"subFunc": "models.CreateEmailValidationToken",
@@ -69,19 +54,6 @@ func (server *server) resendVerifyEmail(c *gin.Context) {
 		return
 	}
 
-	err = server.email.SendValidationEmail(user, token)
-	if err != nil {
-		tx.Rollback()
-		log.WithFields(log.Fields{
-			"func":    "resendVerifyEmail",
-			"subFunc": "emails.SendValidationEmail",
-			"userID":  user.ID,
-		})
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	tx.Commit()
 	c.Status(http.StatusOK)
 	return
 }

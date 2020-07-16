@@ -18,7 +18,7 @@ func (server *server) getProfile(c *gin.Context) {
 		return
 	}
 
-	profile, err := user.GetProfile()
+	profile, err := server.db.GetProfile(user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "getProfile",

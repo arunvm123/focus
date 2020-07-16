@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 
-	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
@@ -19,7 +18,7 @@ func (server *server) getTeamMembers(c *gin.Context) {
 		return
 	}
 
-	members, err := models.GetTeamMembers(server.db, c.Keys["teamID"].(string))
+	members, err := server.db.GetTeamMembers(c.Keys["teamID"].(string))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "getTeamMembers",

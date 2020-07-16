@@ -1,69 +1,32 @@
-package models
+package mysql
 
 import (
 	"errors"
 	"time"
 
+	"github.com/arunvm/travail-backend/models"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
 
-// Organisation groups all the teams together and is typically the company name
-type Organisation struct {
-	ID             string  `json:"id" gorm:"primary_key;auto_increment:false"`
-	AdminID        int     `json:"adminID"`
-	Name           string  `json:"name"`
-	DisplayPicture *string `json:"displayPicture"`
-	Theme          string  `json:"theme"`
-	Type           int     `json:"type"` // Type denotes if this is the user's personal space or of a companies
-	CreatedAt      int64   `json:"createdAt"`
-	Archived       bool    `json:"archived"`
-}
+func (db *Mysql) CreateOrganisation(args *models.CreateOrganisationArgs, user *models.User) error {
+	tx := db.Client.Begin()
 
-const (
-	Personal       = 1
-	Organistation  = 2
-	PersonalString = "Personal"
-)
-
-// Create is a helper function to create a new organisation
-func (org *Organisation) Create(db *gorm.DB) error {
-	return db.Create(&org).Error
-}
-
-// Save is a helper function to update existing organisation
-func (org *Organisation) Save(db *gorm.DB) error {
-	return db.Save(&org).Error
-}
-
-type CreateOrganisationArgs struct {
-	Name           string  `json:"name" binding:"required"`
-	DisplayPicture *string `json:"displayPicture"`
-	Theme          string  `json:"theme" binding:"required"`
-}
-
-type UpdateOrganisationArgs struct {
-	ID             string  `json:"-"`
-	Name           *string `json:"name"`
-	DisplayPicture *string `json:"displayPicture"`
-	Theme          *string `json:"theme"`
-}
-
-func (user *User) CreateOrganisation(db *gorm.DB, args *CreateOrganisationArgs) error {
-	org := Organisation{
+	org := models.Organisation{
 		ID:             uuid.New().String(),
 		AdminID:        user.ID,
 		Archived:       false,
 		CreatedAt:      time.Now().Unix(),
 		Name:           args.Name,
-		Type:           Organistation,
+		Type:           models.Organistation,
 		DisplayPicture: args.DisplayPicture,
 		Theme:          args.Theme,
 	}
 
-	err := org.Create(db)
+	err := tx.Create(org).Error
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "CreateOrganisation",
 			"subFunc": "org.Create",
@@ -73,8 +36,9 @@ func (user *User) CreateOrganisation(db *gorm.DB, args *CreateOrganisationArgs) 
 		return err
 	}
 
-	err = addUserToOrganisation(db, user.ID, org.ID)
+	err = addUserToOrganisation(tx, user.ID, org.ID)
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":           "CreateOrganisation",
 			"subFunc":        "addUserToOrganisation",
@@ -85,13 +49,14 @@ func (user *User) CreateOrganisation(db *gorm.DB, args *CreateOrganisationArgs) 
 		return err
 	}
 
+	tx.Commit()
 	return nil
 }
 
-func (user *User) GetOrganisations(db *gorm.DB) (*[]Organisation, error) {
-	var organisations []Organisation
+func (db *Mysql) GetOrganisations(user *models.User) (*[]models.Organisation, error) {
+	var organisations []models.Organisation
 
-	err := db.Table("organisations").Joins("JOIN organisation_members on organisations.id = organisation_members.organisation_id").
+	err := db.Client.Table("organisations").Joins("JOIN organisation_members on organisations.id = organisation_members.organisation_id").
 		Where("user_id = ? AND organisations.archived = false", user.ID).Select("organisations.*").Find(&organisations).Error
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -105,8 +70,8 @@ func (user *User) GetOrganisations(db *gorm.DB) (*[]Organisation, error) {
 	return &organisations, nil
 }
 
-func (admin *User) UpdateOrganisation(db *gorm.DB, args *UpdateOrganisationArgs) error {
-	org, err := getOrganisationFromID(db, args.ID)
+func (db *Mysql) UpdateOrganisation(args *models.UpdateOrganisationArgs, admin *models.User) error {
+	org, err := db.getOrganisationFromID(args.ID)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":           "UpdateOrganisation",
@@ -127,7 +92,7 @@ func (admin *User) UpdateOrganisation(db *gorm.DB, args *UpdateOrganisationArgs)
 		org.Theme = *args.Theme
 	}
 
-	err = org.Save(db)
+	err = db.Client.Save(org).Error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":           "UpdateOrganisation",
@@ -141,10 +106,10 @@ func (admin *User) UpdateOrganisation(db *gorm.DB, args *UpdateOrganisationArgs)
 	return nil
 }
 
-func getOrganisationFromID(db *gorm.DB, organisationID string) (*Organisation, error) {
-	var org Organisation
+func (db *Mysql) getOrganisationFromID(organisationID string) (*models.Organisation, error) {
+	var org models.Organisation
 
-	err := db.Find(&org, "id = ? AND archived = false", organisationID).Error
+	err := db.Client.Find(&org, "id = ? AND archived = false", organisationID).Error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":           "getOrganisationFromID",
@@ -157,17 +122,17 @@ func getOrganisationFromID(db *gorm.DB, organisationID string) (*Organisation, e
 	return &org, nil
 }
 
-func (user *User) createPersonalOrganisation(db *gorm.DB) (*Organisation, error) {
-	org := Organisation{
+func createPersonalOrganisation(db *gorm.DB, user *models.User) (*models.Organisation, error) {
+	org := models.Organisation{
 		ID:        uuid.New().String(),
 		AdminID:   user.ID,
 		Archived:  false,
 		CreatedAt: time.Now().Unix(),
-		Name:      PersonalString,
-		Type:      Personal,
+		Name:      models.PersonalString,
+		Type:      models.Personal,
 	}
 
-	err := org.Create(db)
+	err := db.Create(org).Error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "createPersonalOrganisation",
@@ -191,10 +156,10 @@ func (user *User) createPersonalOrganisation(db *gorm.DB) (*Organisation, error)
 }
 
 // In the case of an error, returns false and assumes that the user is not admin
-func (user *User) CheckIfOrganisationAdmin(db *gorm.DB, orgID string) bool {
+func (db *Mysql) CheckIfOrganisationAdmin(orgID string, user *models.User) bool {
 	var count int
 
-	err := db.Table("organisations").Where("id = ? AND admin_id = ? AND archived = false AND type = ?", orgID, user.ID, Organistation).Count(&count).Error
+	err := db.Client.Table("organisations").Where("id = ? AND admin_id = ? AND archived = false AND type = ?", orgID, user.ID, models.Organistation).Count(&count).Error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":           "CheckIfOrganisationAdmin",
@@ -212,10 +177,10 @@ func (user *User) CheckIfOrganisationAdmin(db *gorm.DB, orgID string) bool {
 	return true
 }
 
-func GetOrganisationName(db *gorm.DB, organisationID string) (string, error) {
+func (db *Mysql) GetOrganisationName(organisationID string) (string, error) {
 	var name []string
 
-	err := db.Table("organisations").Where("id = ? AND archived = false", organisationID).Pluck("name", &name).Error
+	err := db.Client.Table("organisations").Where("id = ? AND archived = false", organisationID).Pluck("name", &name).Error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":           "GetOrganisationName",

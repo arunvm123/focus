@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 
-	"github.com/arunvm/travail-backend/models"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
@@ -19,7 +18,7 @@ func (server *server) getColumnCards(c *gin.Context) {
 		return
 	}
 
-	cards, err := models.GetColumnCards(server.db, c.GetString("boardColumnID"))
+	cards, err := server.db.GetColumnCards(c.GetString("boardColumnID"))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":          "getColumnCards",

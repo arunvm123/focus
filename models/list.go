@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	userNotAdminOfTeam = errors.New("User not admin of team")
+	UserNotAdminOfTeam = errors.New("User not admin of team")
 )
 
 // List model
@@ -86,7 +86,7 @@ func (user *User) CreateList(db *gorm.DB, args *CreateListArgs) (*List, error) {
 	}
 
 	if team.AdminID != user.ID {
-		return nil, userNotAdminOfTeam
+		return nil, UserNotAdminOfTeam
 	}
 
 	list := List{

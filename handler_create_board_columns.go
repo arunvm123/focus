@@ -32,7 +32,7 @@ func (server *server) createBoardColumn(c *gin.Context) {
 	}
 
 	args.BoardID = c.GetString("boardID")
-	err = user.CreateBoardColumn(server.db, &args)
+	err = server.db.CreateBoardColumn(&args)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "createBoardColumn",

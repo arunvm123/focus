@@ -20,15 +20,13 @@ func (server *server) signup(c *gin.Context) {
 		return
 	}
 
-	if models.CheckIfUserExists(server.db, args.Email) == true {
+	if server.db.CheckIfUserExists(args.Email) == true {
 		c.JSON(http.StatusConflict, "Email already exists")
 		return
 	}
 
-	tx := server.db.Begin()
-	user, err := models.UserSignup(tx, &args, false)
+	_, err = server.db.UserSignup(&args, false, server.email)
 	if err != nil {
-		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "signup",
 			"subFunc": "models.UserSignup",
@@ -38,31 +36,6 @@ func (server *server) signup(c *gin.Context) {
 		return
 	}
 
-	token, err := models.CreateEmailValidationToken(tx, user)
-	if err != nil {
-		tx.Rollback()
-		log.WithFields(log.Fields{
-			"func":    "signup",
-			"subFunc": "models.CreateEmailValidationToken",
-			"email":   user.Email,
-		})
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	err = server.email.SendValidationEmail(user, token)
-	if err != nil {
-		tx.Rollback()
-		log.WithFields(log.Fields{
-			"func":    "signup",
-			"subFunc": "emails.SendValidationEmail",
-			"email":   user.Email,
-		})
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	tx.Commit()
 	c.Status(http.StatusOK)
 	return
 }

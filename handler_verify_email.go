@@ -21,7 +21,7 @@ func (server *server) verifyEmail(c *gin.Context) {
 		return
 	}
 
-	err = models.VerifyEmail(server.db, token.Token)
+	err = server.db.VerifyEmail(token.Token)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "verifyEmail",

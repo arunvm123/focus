@@ -38,10 +38,8 @@ func (server *server) inviteToOrganisation(c *gin.Context) {
 
 	args.OrganisationID = c.Keys["organisationID"].(string)
 
-	tx := server.db.Begin()
-	invite, err := admin.CreateOrganisationInviteToken(tx, &args)
+	err = server.db.CreateOrganisationInviteToken(&args, admin, server.email)
 	if err != nil {
-		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "inviteToOrganisation",
 			"subFunc": "admin.CreateOrganisationInviteToken",
@@ -52,20 +50,6 @@ func (server *server) inviteToOrganisation(c *gin.Context) {
 		return
 	}
 
-	err = server.email.SendOrganisationInvite(tx, admin.Name, invite)
-	if err != nil {
-		tx.Rollback()
-		log.WithFields(log.Fields{
-			"func":    "inviteToOrganisation",
-			"subFunc": "emails.SendInviteToOrganisation",
-			"adminID": admin.ID,
-			"args":    args,
-		}).Error(err)
-		c.JSON(http.StatusInternalServerError, "Error when sending email")
-		return
-	}
-
-	tx.Commit()
 	c.Status(http.StatusOK)
 	return
 }

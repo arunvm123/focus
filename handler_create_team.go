@@ -33,10 +33,8 @@ func (server *server) createTeam(c *gin.Context) {
 
 	args.OrganisationID = c.Keys["organisationID"].(string)
 
-	tx := server.db.Begin()
-	err = user.CreateTeam(tx, &args)
+	err = server.db.CreateTeam(&args, user)
 	if err != nil {
-		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "createTeam",
 			"subFunc": "user.CreateTeam",
@@ -47,7 +45,6 @@ func (server *server) createTeam(c *gin.Context) {
 		return
 	}
 
-	tx.Commit()
 	c.Status(http.StatusOK)
 	return
 }

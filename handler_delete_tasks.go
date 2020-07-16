@@ -37,7 +37,7 @@ func (server *server) deleteTasks(c *gin.Context) {
 		return
 	}
 
-	err = user.DeleteTasks(server.db, &args)
+	err = server.db.DeleteTasks(&args, user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "deleteTasks",

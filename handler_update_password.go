@@ -36,7 +36,7 @@ func (server *server) updatePassword(c *gin.Context) {
 		return
 	}
 
-	err = user.UpdatePassword(server.db, &args)
+	err = server.db.UpdatePassword(&args, user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "updatePassword",

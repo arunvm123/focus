@@ -31,7 +31,7 @@ func (server *server) createList(c *gin.Context) {
 		return
 	}
 
-	list, err := user.CreateList(server.db, &args)
+	list, err := server.db.CreateList(&args, user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "createList",

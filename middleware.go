@@ -57,7 +57,7 @@ func (server *server) checkIfOrganisationAdmin() gin.HandlerFunc {
 		}
 		c.Keys["organisationID"] = orgID
 
-		if user.CheckIfOrganisationAdmin(server.db, orgID) == false {
+		if server.db.CheckIfOrganisationAdmin(orgID, user) == false {
 			c.JSON(http.StatusUnauthorized, "Invalid user")
 			c.Abort()
 			return
@@ -87,7 +87,7 @@ func (server *server) checkIfOrganisationMember() gin.HandlerFunc {
 		}
 		c.Keys["organisationID"] = orgID
 
-		if user.CheckIfOrganisationMember(server.db, orgID) == false {
+		if server.db.CheckIfOrganisationMember(orgID, user) == false {
 			c.JSON(http.StatusUnauthorized, "Invalid user")
 			c.Abort()
 			return
@@ -117,7 +117,7 @@ func (server *server) checkIfTeamAdmin() gin.HandlerFunc {
 		}
 		c.Keys["teamID"] = teamID
 
-		if user.CheckIfTeamAdmin(server.db, teamID) == false {
+		if server.db.CheckIfTeamAdmin(teamID, user) == false {
 			c.JSON(http.StatusUnauthorized, "Invalid user")
 			c.Abort()
 			return
@@ -147,7 +147,7 @@ func (server *server) checkIfTeamMember() gin.HandlerFunc {
 		}
 		c.Keys["teamID"] = teamID
 
-		if user.CheckIfTeamMember(server.db, teamID) == false {
+		if server.db.CheckIfTeamMember(teamID, user) == false {
 			c.JSON(http.StatusUnauthorized, "Invalid user")
 			c.Abort()
 			return
@@ -159,7 +159,7 @@ func (server *server) checkIfTeamMember() gin.HandlerFunc {
 
 func (server *server) checkIfBoardPartOfTeam() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if models.CheckIfBoardPartOfTeam(server.db, c.Query("boardID"), c.Query("teamID")) == false {
+		if server.db.CheckIfBoardPartOfTeam(c.Query("boardID"), c.Query("teamID")) == false {
 			c.JSON(http.StatusUnauthorized, "Board not part of team")
 			c.Abort()
 			return
@@ -172,7 +172,7 @@ func (server *server) checkIfBoardPartOfTeam() gin.HandlerFunc {
 
 func (server *server) checkIfColumnPartOfBoard() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if models.CheckIfColumnPartOfBoard(server.db, c.Query("boardColumnID"), c.Query("boardID")) == false {
+		if server.db.CheckIfColumnPartOfBoard(c.Query("boardColumnID"), c.Query("boardID")) == false {
 			c.JSON(http.StatusUnauthorized, "Board column not of specified board")
 			c.Abort()
 			return
@@ -248,7 +248,7 @@ func (server *server) getUserFromToken(token string) (*models.User, error) {
 
 	userID := parsedString.Claims.(jwt.MapClaims)["id"].(float64)
 
-	user, err := models.GetUserFromID(server.db, int(userID))
+	user, err := server.db.GetUserFromID(int(userID))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "getUserFromToken",

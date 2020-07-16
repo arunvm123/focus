@@ -64,12 +64,10 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 		return
 	}
 
-	tx := server.db.Begin()
 	var user *models.User
-	if models.CheckIfUserExists(tx, userInfo.Email) == true {
-		user, err = models.GetUserFromEmail(tx, userInfo.Email)
+	if server.db.CheckIfUserExists(userInfo.Email) == true {
+		user, err = server.db.GetUserFromEmail(userInfo.Email)
 		if err != nil {
-			tx.Rollback()
 			log.WithFields(log.Fields{
 				"func":    "loginWithGoogle",
 				"subFunc": "models.GetUserFromEmail",
@@ -84,12 +82,11 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 			return
 		}
 	} else {
-		user, err = models.UserSignup(tx, &models.SignUpArgs{
+		user, err = server.db.UserSignup(&models.SignUpArgs{
 			Email: userInfo.Email,
 			Name:  userInfo.Name,
-		}, true)
+		}, true, server.email)
 		if err != nil {
-			tx.Rollback()
 			log.WithFields(log.Fields{
 				"func":    "loginWithGoogle",
 				"subFunc": "models.SignUpWithGoogle",
@@ -102,7 +99,6 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 
 	signedToken, err := getJWTToken(user.ID)
 	if err != nil {
-		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "loginWithGoogle",
 			"subFunc": "getJWTToken",
@@ -112,7 +108,7 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 		return
 	}
 
-	personalTeamID, err := user.GetPersonalTeamID(tx)
+	personalTeamID, err := server.db.GetPersonalTeamID(user)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "loginWithGoogle",
@@ -124,7 +120,6 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 
 	}
 
-	tx.Commit()
 	c.SetCookie("Authorization", signedToken, 0, "", "travail.in", false, false)
 
 	c.JSON(http.StatusOK, struct {

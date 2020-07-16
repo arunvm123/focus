@@ -31,10 +31,8 @@ func (server *server) createOrganisation(c *gin.Context) {
 		return
 	}
 
-	tx := server.db.Begin()
-	err = user.CreateOrganisation(tx, &args)
+	err = server.db.CreateOrganisation(&args, user)
 	if err != nil {
-		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "createOrganisation",
 			"subFunc": "user.CreateOrganisation",
@@ -45,7 +43,6 @@ func (server *server) createOrganisation(c *gin.Context) {
 		return
 	}
 
-	tx.Commit()
 	c.Status(http.StatusOK)
 	return
 }

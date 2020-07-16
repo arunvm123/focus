@@ -2,8 +2,6 @@ package sendgrid
 
 import (
 	"github.com/arunvm/travail-backend/config"
-	"github.com/arunvm/travail-backend/models"
-	"github.com/jinzhu/gorm"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	log "github.com/sirupsen/logrus"
@@ -27,11 +25,11 @@ func New(sendgridKey string) *Sendgrid {
 	}
 }
 
-func (sendgrid *Sendgrid) SendValidationEmail(user *models.User, token string) error {
+func (sendgrid *Sendgrid) SendValidationEmail(name, email string, token string) error {
 	to := []*mail.Email{}
 	to = append(to, &mail.Email{
-		Name:    user.Name,
-		Address: user.Email,
+		Name:    name,
+		Address: email,
 	})
 
 	c, err := config.GetConfig()
@@ -39,22 +37,21 @@ func (sendgrid *Sendgrid) SendValidationEmail(user *models.User, token string) e
 		log.WithFields(log.Fields{
 			"func":    "SendValidationEmail",
 			"subFunc": "config.GetConfig",
-			"userID":  user.ID,
 		}).Error(err)
 		return err
 	}
 
 	return sendEmail(sendgrid.Client, to, map[string]interface{}{
-		"name":            user.Name,
+		"name":            name,
 		"validation_link": c.DomainURL + "verify/module?token=" + token,
 	}, emailValidation)
 }
 
-func (sendgrid *Sendgrid) SendForgotPasswordEmail(user *models.User, token string) error {
+func (sendgrid *Sendgrid) SendForgotPasswordEmail(name, email string, token string) error {
 	to := []*mail.Email{}
 	to = append(to, &mail.Email{
-		Name:    user.Name,
-		Address: user.Email,
+		Name:    name,
+		Address: email,
 	})
 
 	c, err := config.GetConfig()
@@ -62,41 +59,27 @@ func (sendgrid *Sendgrid) SendForgotPasswordEmail(user *models.User, token strin
 		log.WithFields(log.Fields{
 			"func":    "SendForgotPasswordnEmail",
 			"subFunc": "config.GetConfig",
-			"userID":  user.ID,
 		}).Error(err)
 		return err
 	}
 
 	return sendEmail(sendgrid.Client, to, map[string]interface{}{
-		"name": user.Name,
+		"name": name,
 		"link": c.DomainURL + "forgot/module?token=" + token,
 	}, forgotPassword)
 }
 
-func (sendgrid *Sendgrid) SendOrganisationInvite(db *gorm.DB, adminName string, invite *models.OrganisationInvitation) error {
+func (sendgrid *Sendgrid) SendOrganisationInvite(adminName, inviteEmail, token, orgName string) error {
 	to := []*mail.Email{}
 	to = append(to, &mail.Email{
-		Address: invite.Email,
+		Address: inviteEmail,
 	})
-
-	orgName, err := models.GetOrganisationName(db, invite.OrganisationID)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"func":          "SendInviteToOrganisation",
-			"subFunc":       "models.GetOrganisationName",
-			"organistionID": invite.OrganisationID,
-			"email":         invite.Email,
-		}).Error(err)
-		return err
-	}
 
 	c, err := config.GetConfig()
 	if err != nil {
 		log.WithFields(log.Fields{
-			"func":          "SendInviteToOrganisation",
-			"subFunc":       "config.GetConfig",
-			"organistionID": invite.OrganisationID,
-			"email":         invite.Email,
+			"func":    "SendInviteToOrganisation",
+			"subFunc": "config.GetConfig",
 		}).Error(err)
 		return err
 	}
@@ -104,7 +87,7 @@ func (sendgrid *Sendgrid) SendOrganisationInvite(db *gorm.DB, adminName string, 
 	return sendEmail(sendgrid.Client, to, map[string]interface{}{
 		"admin_name":        adminName,
 		"organisation_name": orgName,
-		"invite_link":       c.DomainURL + "organisation/invite/accept?token=" + invite.Token,
+		"invite_link":       c.DomainURL + "organisation/invite/accept?token=" + token,
 	}, organisationInvite)
 }
 

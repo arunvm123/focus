@@ -115,7 +115,7 @@ func (user *User) CheckIfTeamMember(db *gorm.DB, teamID string) bool {
 
 	err := db.Table("teams").Joins("JOIN team_members on teams.id = team_members.team_id").
 		Joins("JOIN organisations on teams.organisation_id = organisations.id").
-		Where("teams.id = ? AND teams.archived = false AND team_members.user_id = ? AND organisations.type = ?", teamID, user.ID, organistation).
+		Where("teams.id = ? AND teams.archived = false AND team_members.user_id = ? AND organisations.type = ?", teamID, user.ID, Organistation).
 		Count(&count).Error
 	if err != nil {
 		log.WithFields(log.Fields{

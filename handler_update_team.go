@@ -32,7 +32,7 @@ func (server *server) updateTeam(c *gin.Context) {
 	}
 
 	args.TeamID = c.Keys["teamID"].(string)
-	err = teamAdmin.UpdateTeam(server.db, &args)
+	err = server.db.UpdateTeam(&args, teamAdmin)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":        "updateTeam",

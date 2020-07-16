@@ -32,7 +32,7 @@ func (server *server) updateBug(c *gin.Context) {
 		return
 	}
 
-	err = admin.UpdateBug(server.db, &args)
+	err = server.db.UpdateBug(&args)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "updateBug",
