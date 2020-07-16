@@ -43,7 +43,7 @@ func (db *Mysql) CreateTask(args *models.CreateTaskArgs, user *models.User) (*mo
 	task.Complete = false
 	task.CreatedAt = time.Now().Unix()
 
-	err = task.Create(tx)
+	err = tx.Create(&task).Error
 	if err != nil {
 		tx.Rollback()
 		log.WithFields(log.Fields{

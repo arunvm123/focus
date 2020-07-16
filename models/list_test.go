@@ -1,301 +1,288 @@
 package models
 
-import (
-	"database/sql"
-	"database/sql/driver"
-	"regexp"
-	"testing"
-	"time"
+// func setup() (*gorm.DB, sqlmock.Sqlmock, *sql.DB, error) {
+// 	mockdb, mock, err := sqlmock.New()
+// 	if err != nil {
+// 		return nil, nil, nil, err
+// 	}
 
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
-	"gopkg.in/go-playground/assert.v1"
-)
+// 	db, err := gorm.Open("mysql", mockdb)
+// 	if err != nil {
+// 		return nil, nil, nil, err
+// 	}
 
-func setup() (*gorm.DB, sqlmock.Sqlmock, *sql.DB, error) {
-	mockdb, mock, err := sqlmock.New()
-	if err != nil {
-		return nil, nil, nil, err
-	}
+// 	return db, mock, mockdb, err
+// }
 
-	db, err := gorm.Open("mysql", mockdb)
-	if err != nil {
-		return nil, nil, nil, err
-	}
+// func TestGetList(t *testing.T) {
+// 	row1 := List{
+// 		Heading:   "Heading1",
+// 		Archived:  false,
+// 		CreatedAt: time.Now().Unix(),
+// 		ID:        "935b639e-2fc9-473d-a2fc-6ecf9562f444",
+// 		TeamID:    uuid.New().String(),
+// 		UserID:    1,
+// 	}
 
-	return db, mock, mockdb, err
-}
+// 	db, mock, mockdb, err := setup()
+// 	if err != nil {
+// 		t.Errorf("Error initialising mock DB; %v", err)
+// 	}
+// 	defer mockdb.Close()
 
-func TestGetList(t *testing.T) {
-	row1 := List{
-		Heading:   "Heading1",
-		Archived:  false,
-		CreatedAt: time.Now().Unix(),
-		ID:        "935b639e-2fc9-473d-a2fc-6ecf9562f444",
-		TeamID:    uuid.New().String(),
-		UserID:    1,
-	}
+// 	tables := []struct {
+// 		name   string
+// 		data   *List
+// 		input  string
+// 		output *List
+// 		err    error
+// 	}{
+// 		{
+// 			name:   "list present",
+// 			data:   &row1,
+// 			input:  row1.ID,
+// 			output: &row1,
+// 			err:    nil,
+// 		},
+// 		{
+// 			name:   "list absent",
+// 			data:   nil,
+// 			input:  uuid.New().String(),
+// 			output: nil,
+// 			err:    gorm.ErrRecordNotFound,
+// 		},
+// 	}
 
-	db, mock, mockdb, err := setup()
-	if err != nil {
-		t.Errorf("Error initialising mock DB; %v", err)
-	}
-	defer mockdb.Close()
+// 	for _, tt := range tables {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			query := mock.ExpectQuery(".*")
 
-	tables := []struct {
-		name   string
-		data   *List
-		input  string
-		output *List
-		err    error
-	}{
-		{
-			name:   "list present",
-			data:   &row1,
-			input:  row1.ID,
-			output: &row1,
-			err:    nil,
-		},
-		{
-			name:   "list absent",
-			data:   nil,
-			input:  uuid.New().String(),
-			output: nil,
-			err:    gorm.ErrRecordNotFound,
-		},
-	}
+// 			if tt.data != nil {
+// 				rows := mock.NewRows([]string{"id", "user_id", "team_id", "heading", "created_at", "archived"}).
+// 					AddRow(tt.data.ID, tt.data.UserID, tt.data.TeamID, tt.data.Heading, tt.data.CreatedAt, tt.data.Archived)
 
-	for _, tt := range tables {
-		t.Run(tt.name, func(t *testing.T) {
-			query := mock.ExpectQuery(".*")
+// 				query.WillReturnRows(rows)
+// 			} else {
+// 				query.WillReturnError(tt.err)
+// 			}
 
-			if tt.data != nil {
-				rows := mock.NewRows([]string{"id", "user_id", "team_id", "heading", "created_at", "archived"}).
-					AddRow(tt.data.ID, tt.data.UserID, tt.data.TeamID, tt.data.Heading, tt.data.CreatedAt, tt.data.Archived)
+// 			list, err := getList(db, tt.input)
+// 			if err != nil {
+// 				if err != tt.err {
+// 					t.Errorf("wrong error behavior %v, wantErr %v", err, tt.err)
+// 				}
+// 			}
 
-				query.WillReturnRows(rows)
-			} else {
-				query.WillReturnError(tt.err)
-			}
+// 			if err == nil {
+// 				assert.Equal(t, tt.output, list)
+// 			}
+// 		})
+// 	}
 
-			list, err := getList(db, tt.input)
-			if err != nil {
-				if err != tt.err {
-					t.Errorf("wrong error behavior %v, wantErr %v", err, tt.err)
-				}
-			}
+// }
 
-			if err == nil {
-				assert.Equal(t, tt.output, list)
-			}
-		})
-	}
+// func TestCreateList(t *testing.T) {
+// 	user := &User{
+// 		ID:          1,
+// 		Email:       "random@rhyta.com",
+// 		GoogleOauth: false,
+// 		Name:        "John Doe",
+// 		Password:    "",
+// 		Verified:    true,
+// 	}
 
-}
+// 	teamID := uuid.New().String()
 
-func TestCreateList(t *testing.T) {
-	user := &User{
-		ID:          1,
-		Email:       "random@rhyta.com",
-		GoogleOauth: false,
-		Name:        "John Doe",
-		Password:    "",
-		Verified:    true,
-	}
+// 	tables := []struct {
+// 		name             string
+// 		user             *User
+// 		team             *Team
+// 		args             CreateListArgs
+// 		err              error
+// 		shouldCreateList bool
+// 	}{
+// 		{
+// 			name: "successful list creation",
+// 			args: CreateListArgs{
+// 				Heading: "Heading",
+// 				TeamID:  teamID,
+// 			},
+// 			err: nil,
+// 			team: &Team{
+// 				ID:             teamID,
+// 				AdminID:        user.ID,
+// 				Archived:       false,
+// 				CreatedAt:      time.Now().Unix(),
+// 				Name:           "Test Team",
+// 				OrganisationID: uuid.New().String(),
+// 			},
+// 			user:             user,
+// 			shouldCreateList: true,
+// 		},
+// 		{
+// 			name: "user not admin",
+// 			user: user,
+// 			team: &Team{
+// 				ID:             teamID,
+// 				AdminID:        2, // AdminID value is different from user id
+// 				Archived:       false,
+// 				CreatedAt:      time.Now().Unix(),
+// 				Name:           "Another Test Team",
+// 				OrganisationID: uuid.New().String(),
+// 			},
+// 			args: CreateListArgs{
+// 				Heading: "Heading",
+// 				TeamID:  teamID,
+// 			},
+// 			err:              userNotAdminOfTeam,
+// 			shouldCreateList: false,
+// 		},
+// 		{
+// 			name: "team does not exist",
+// 			user: user,
+// 			team: nil,
+// 			args: CreateListArgs{
+// 				Heading: "Heading",
+// 				TeamID:  uuid.New().String(),
+// 			},
+// 			err:              gorm.ErrRecordNotFound,
+// 			shouldCreateList: false,
+// 		},
+// 	}
 
-	teamID := uuid.New().String()
+// 	db, mock, mockdb, err := setup()
+// 	if err != nil {
+// 		t.Errorf("Error initialising mock DB; %v", err)
+// 	}
+// 	defer mockdb.Close()
 
-	tables := []struct {
-		name             string
-		user             *User
-		team             *Team
-		args             CreateListArgs
-		err              error
-		shouldCreateList bool
-	}{
-		{
-			name: "successful list creation",
-			args: CreateListArgs{
-				Heading: "Heading",
-				TeamID:  teamID,
-			},
-			err: nil,
-			team: &Team{
-				ID:             teamID,
-				AdminID:        user.ID,
-				Archived:       false,
-				CreatedAt:      time.Now().Unix(),
-				Name:           "Test Team",
-				OrganisationID: uuid.New().String(),
-			},
-			user:             user,
-			shouldCreateList: true,
-		},
-		{
-			name: "user not admin",
-			user: user,
-			team: &Team{
-				ID:             teamID,
-				AdminID:        2, // AdminID value is different from user id
-				Archived:       false,
-				CreatedAt:      time.Now().Unix(),
-				Name:           "Another Test Team",
-				OrganisationID: uuid.New().String(),
-			},
-			args: CreateListArgs{
-				Heading: "Heading",
-				TeamID:  teamID,
-			},
-			err:              userNotAdminOfTeam,
-			shouldCreateList: false,
-		},
-		{
-			name: "team does not exist",
-			user: user,
-			team: nil,
-			args: CreateListArgs{
-				Heading: "Heading",
-				TeamID:  uuid.New().String(),
-			},
-			err:              gorm.ErrRecordNotFound,
-			shouldCreateList: false,
-		},
-	}
+// 	for _, tt := range tables {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			if tt.team != nil {
+// 				teamRows := mock.NewRows([]string{"id", "organisation_id", "admin_id", "name", "description", "created_at", "archived"}).
+// 					AddRow(tt.team.ID, tt.team.OrganisationID, tt.team.AdminID, tt.team.Name, tt.team.Description, tt.team.CreatedAt, tt.team.Archived)
 
-	db, mock, mockdb, err := setup()
-	if err != nil {
-		t.Errorf("Error initialising mock DB; %v", err)
-	}
-	defer mockdb.Close()
+// 				mock.ExpectQuery(".*").WithArgs(tt.args.TeamID).WillReturnRows(teamRows)
+// 			} else {
+// 				mock.ExpectQuery(".*").WillReturnError(gorm.ErrRecordNotFound)
+// 			}
 
-	for _, tt := range tables {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.team != nil {
-				teamRows := mock.NewRows([]string{"id", "organisation_id", "admin_id", "name", "description", "created_at", "archived"}).
-					AddRow(tt.team.ID, tt.team.OrganisationID, tt.team.AdminID, tt.team.Name, tt.team.Description, tt.team.CreatedAt, tt.team.Archived)
+// 			if tt.shouldCreateList {
+// 				mock.ExpectBegin()
+// 				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `lists`")).WithArgs(sqlmock.AnyArg(), tt.user.ID, tt.args.TeamID, tt.args.Heading, sqlmock.AnyArg(), false).
+// 					WillReturnResult(driver.ResultNoRows)
+// 				mock.ExpectCommit()
+// 			}
 
-				mock.ExpectQuery(".*").WithArgs(tt.args.TeamID).WillReturnRows(teamRows)
-			} else {
-				mock.ExpectQuery(".*").WillReturnError(gorm.ErrRecordNotFound)
-			}
+// 			_, err = user.CreateList(db, &tt.args)
+// 			if err != nil {
+// 				if err != tt.err {
+// 					t.Errorf("wrong error behavior %v, wantErr %v", err, tt.err)
+// 				}
+// 			}
 
-			if tt.shouldCreateList {
-				mock.ExpectBegin()
-				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `lists`")).WithArgs(sqlmock.AnyArg(), tt.user.ID, tt.args.TeamID, tt.args.Heading, sqlmock.AnyArg(), false).
-					WillReturnResult(driver.ResultNoRows)
-				mock.ExpectCommit()
-			}
+// 			if err == nil {
+// 				assert.Equal(t, tt.err, err)
+// 			}
 
-			_, err = user.CreateList(db, &tt.args)
-			if err != nil {
-				if err != tt.err {
-					t.Errorf("wrong error behavior %v, wantErr %v", err, tt.err)
-				}
-			}
+// 		})
+// 	}
 
-			if err == nil {
-				assert.Equal(t, tt.err, err)
-			}
+// }
 
-		})
-	}
+// func TestUpdateList(t *testing.T) {
+// 	db, mock, mockdb, err := setup()
+// 	if err != nil {
+// 		t.Errorf("Error initialising mock DB; %v", err)
+// 	}
+// 	defer mockdb.Close()
 
-}
+// 	row1 := List{
+// 		Heading:   "Heading1",
+// 		Archived:  false,
+// 		CreatedAt: time.Now().Unix(),
+// 		ID:        "935b639e-2fc9-473d-a2fc-6ecf9562f444",
+// 		TeamID:    uuid.New().String(),
+// 		UserID:    1,
+// 	}
 
-func TestUpdateList(t *testing.T) {
-	db, mock, mockdb, err := setup()
-	if err != nil {
-		t.Errorf("Error initialising mock DB; %v", err)
-	}
-	defer mockdb.Close()
+// 	heading := "heading"
+// 	archived := false
+// 	args := &UpdateListArgs{
+// 		Heading:  &heading,
+// 		Archived: &archived,
+// 		ID:       row1.ID,
+// 	}
 
-	row1 := List{
-		Heading:   "Heading1",
-		Archived:  false,
-		CreatedAt: time.Now().Unix(),
-		ID:        "935b639e-2fc9-473d-a2fc-6ecf9562f444",
-		TeamID:    uuid.New().String(),
-		UserID:    1,
-	}
+// 	tables := []struct {
+// 		name             string
+// 		user             *User
+// 		list             *List
+// 		args             *UpdateListArgs
+// 		err              error
+// 		shouldUpdateList bool
+// 	}{
+// 		{
+// 			name:             "update list successfully",
+// 			list:             &row1,
+// 			args:             args,
+// 			err:              nil,
+// 			shouldUpdateList: true,
+// 			user:             getUser(),
+// 		},
+// 		{
+// 			name:             "list does not exist",
+// 			list:             nil,
+// 			args:             args,
+// 			err:              gorm.ErrRecordNotFound,
+// 			shouldUpdateList: false,
+// 			user:             getUser(),
+// 		},
+// 	}
 
-	heading := "heading"
-	archived := false
-	args := &UpdateListArgs{
-		Heading:  &heading,
-		Archived: &archived,
-		ID:       row1.ID,
-	}
+// 	for _, tt := range tables {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			if tt.list != nil {
+// 				rows := mock.NewRows([]string{"id", "user_id", "team_id", "heading", "created_at", "archived"}).
+// 					AddRow(tt.list.ID, tt.list.UserID, tt.list.TeamID, tt.list.Heading, tt.list.CreatedAt, tt.list.Archived)
 
-	tables := []struct {
-		name             string
-		user             *User
-		list             *List
-		args             *UpdateListArgs
-		err              error
-		shouldUpdateList bool
-	}{
-		{
-			name:             "update list successfully",
-			list:             &row1,
-			args:             args,
-			err:              nil,
-			shouldUpdateList: true,
-			user:             getUser(),
-		},
-		{
-			name:             "list does not exist",
-			list:             nil,
-			args:             args,
-			err:              gorm.ErrRecordNotFound,
-			shouldUpdateList: false,
-			user:             getUser(),
-		},
-	}
+// 				mock.ExpectQuery(".*").WillReturnRows(rows)
+// 			} else {
+// 				mock.ExpectQuery(".*").WillReturnError(gorm.ErrRecordNotFound)
+// 			}
 
-	for _, tt := range tables {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.list != nil {
-				rows := mock.NewRows([]string{"id", "user_id", "team_id", "heading", "created_at", "archived"}).
-					AddRow(tt.list.ID, tt.list.UserID, tt.list.TeamID, tt.list.Heading, tt.list.CreatedAt, tt.list.Archived)
+// 			if tt.shouldUpdateList {
+// 				mock.ExpectBegin()
+// 				mock.ExpectExec(regexp.QuoteMeta("UPDATE `lists` SET")).
+// 					WithArgs(tt.list.UserID, tt.list.TeamID, tt.args.Heading, tt.list.CreatedAt, tt.args.Archived, tt.args.ID).WillReturnResult(sqlmock.NewResult(0, 1))
+// 				mock.ExpectCommit()
+// 			}
 
-				mock.ExpectQuery(".*").WillReturnRows(rows)
-			} else {
-				mock.ExpectQuery(".*").WillReturnError(gorm.ErrRecordNotFound)
-			}
+// 			err = tt.user.UpdateList(db, args)
+// 			if err != nil {
+// 				if err != tt.err {
+// 					t.Errorf("wrong error behavior %v, wantErr %v", err, tt.err)
+// 				}
+// 			}
 
-			if tt.shouldUpdateList {
-				mock.ExpectBegin()
-				mock.ExpectExec(regexp.QuoteMeta("UPDATE `lists` SET")).
-					WithArgs(tt.list.UserID, tt.list.TeamID, tt.args.Heading, tt.list.CreatedAt, tt.args.Archived, tt.args.ID).WillReturnResult(sqlmock.NewResult(0, 1))
-				mock.ExpectCommit()
-			}
+// 			if err == nil {
+// 				assert.Equal(t, tt.err, err)
+// 			}
 
-			err = tt.user.UpdateList(db, args)
-			if err != nil {
-				if err != tt.err {
-					t.Errorf("wrong error behavior %v, wantErr %v", err, tt.err)
-				}
-			}
+// 		})
+// 	}
 
-			if err == nil {
-				assert.Equal(t, tt.err, err)
-			}
+// }
 
-		})
-	}
+// func getUser() *User {
+// 	user := &User{
+// 		ID:          1,
+// 		Email:       "johnDoe@rhyta.com",
+// 		GoogleOauth: false,
+// 		Name:        "John Doe",
+// 		Password:    "",
+// 		Verified:    true,
+// 	}
 
-}
-
-func getUser() *User {
-	user := &User{
-		ID:          1,
-		Email:       "johnDoe@rhyta.com",
-		GoogleOauth: false,
-		Name:        "John Doe",
-		Password:    "",
-		Verified:    true,
-	}
-
-	return user
-}
+// 	return user
+// }
