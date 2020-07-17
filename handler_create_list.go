@@ -15,7 +15,7 @@ func (server *server) createList(c *gin.Context) {
 			"func":    "createList",
 			"subFunc": "getUserFromContext",
 		}).Error(err)
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, "Error fetching user")
 		return
 	}
 
