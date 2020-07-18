@@ -1,8 +1,6 @@
 package mockdb
 
 import (
-	"log"
-
 	"github.com/arunvm/travail-backend/email"
 	"github.com/arunvm/travail-backend/models"
 	push "github.com/arunvm/travail-backend/push_notification"
@@ -27,7 +25,6 @@ func (mock *MockDB) UpdateList(args *models.UpdateListArgs, user *models.User) e
 
 func (mock *MockDB) CreateList(args *models.CreateListArgs, user *models.User) (*models.List, error) {
 	rets := mock.Called(args, user)
-	log.Println("HEy", rets)
 	return rets.Get(0).(*models.List), rets.Error(1)
 }
 
