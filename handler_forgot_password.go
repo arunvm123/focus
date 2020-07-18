@@ -39,8 +39,11 @@ func (server *server) forgotPassword(c *gin.Context) {
 		return
 	}
 
-	err = server.db.CreateForgotPasswordToken(user, server.email)
+	tx := server.db.Begin()
+
+	token, err := tx.CreateForgotPasswordToken(user)
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "forgotPassword",
 			"subFunc": "user.CreateForgotPasswordToken",
@@ -50,6 +53,19 @@ func (server *server) forgotPassword(c *gin.Context) {
 		return
 	}
 
+	err = server.email.SendForgotPasswordEmail(user.Name, user.Email, token)
+	if err != nil {
+		tx.Rollback()
+		log.WithFields(log.Fields{
+			"func":    "forgotPassword",
+			"subFunc": "emails.SendForgotPasswordnEmail",
+			"userID":  user.ID,
+		}).Error(err)
+		c.JSON(http.StatusInternalServerError, "error when sending email")
+		return
+	}
+
+	tx.Commit()
 	c.Status(http.StatusOK)
 	return
 }

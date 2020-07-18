@@ -223,3 +223,16 @@ func (mock *MockDB) UserSignup(args *models.SignUpArgs, googleOauth bool, emailC
 func (mock *MockDB) UpdatePassword(args *models.UpdatePasswordArgs, user *models.User) error {
 	return nil
 }
+
+// Transaction
+func (mock *MockDB) Begin() models.DB {
+	return nil
+}
+
+func (mock *MockDB) Commit() {
+	return
+}
+
+func (mock *MockDB) Rollback() {
+	return
+}

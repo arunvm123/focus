@@ -32,7 +32,7 @@ type DB interface {
 	AddNotificationToken(args *AddNotificationTokenArgs, user *User) error
 	GetNotificationTokens(user *User) ([]string, error)
 	// Forgot password token functions
-	CreateForgotPasswordToken(user *User, emailCLient email.Email) error
+	CreateForgotPasswordToken(user *User) (string, error)
 	ResetPassword(token, password string) error
 	// List functions
 	CreateList(args *CreateListArgs, user *User) (*List, error)
@@ -73,4 +73,6 @@ type DB interface {
 	CheckIfUserExists(email string) bool
 	UserSignup(args *SignUpArgs, googleOauth bool, emailClient email.Email) (*User, error)
 	UpdatePassword(args *UpdatePasswordArgs, user *User) error
+	// Transaction
+	Transaction
 }

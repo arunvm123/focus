@@ -3,7 +3,6 @@ package mysql
 import (
 	"time"
 
-	"github.com/arunvm/travail-backend/email"
 	"github.com/arunvm/travail-backend/models"
 	"github.com/jinzhu/gorm"
 	"github.com/rs/xid"
@@ -11,60 +10,43 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (db *Mysql) CreateForgotPasswordToken(user *models.User, emailClient email.Email) error {
+func (db *Mysql) CreateForgotPasswordToken(user *models.User) (string, error) {
 	var token models.ForgotPasswordToken
 
-	tx := db.Client.Begin()
-
-	err := tx.Find(&token, "user_id = ?", user.ID).Error
+	err := db.Client.Find(&token, "user_id = ?", user.ID).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			token.UserID = user.ID
 			token.Token = xid.New().String()
 			token.ExpiresAt = time.Now().Unix() + int64(60*60)
 
-			err = tx.Create(token).Error
+			err = db.Client.Create(token).Error
 			if err != nil {
-				tx.Rollback()
 				log.WithFields(log.Fields{
 					"func":    "CreateForgotPasswordToken",
 					"subFunc": "token.Create",
 					"userID":  user.ID,
 				}).Error(err)
-				return err
+				return "", err
 			}
-			return nil
+			return token.Token, nil
 		}
-		tx.Rollback()
-		return err
+		return "", err
 	} else {
 		token.Token = xid.New().String()
 		token.ExpiresAt = time.Now().Unix() + int64(60*60)
-		err = tx.Save(token).Error
+		err = db.Client.Save(token).Error
 		if err != nil {
-			tx.Rollback()
 			log.WithFields(log.Fields{
 				"func":    "CreateForgotPasswordToken",
 				"subFunc": "token.Save",
 				"userID":  user.ID,
 			}).Error(err)
-			return err
+			return "", err
 		}
 	}
 
-	err = emailClient.SendForgotPasswordEmail(user.Name, user.Email, token.Token)
-	if err != nil {
-		tx.Rollback()
-		log.WithFields(log.Fields{
-			"func":    "forgotPassword",
-			"subFunc": "emails.SendForgotPasswordnEmail",
-			"userID":  user.ID,
-		}).Error(err)
-		return err
-	}
-
-	tx.Commit()
-	return nil
+	return token.Token, nil
 }
 
 func (db *Mysql) ResetPassword(token, password string) error {
