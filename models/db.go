@@ -25,7 +25,7 @@ type DB interface {
 	GetColumnCards(columnID string) (*[]ColumnCard, error)
 	UpdateColumnCard(args *UpdateColumnCardArgs, user *User) error
 	// Email validate token functions
-	CreateEmailValidationToken(user *User, emailCLient email.Email) error
+	CreateEmailValidationToken(user *User) (string, error)
 	VerifyEmail(token string) error
 	InvalidateEmailTokens(userID int) error
 	// FCM notification token functions

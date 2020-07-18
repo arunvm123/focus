@@ -84,8 +84,8 @@ func (mock *MockDB) UpdateColumnCard(args *models.UpdateColumnCardArgs, user *mo
 	return nil
 }
 
-func (mock *MockDB) CreateEmailValidationToken(user *models.User, emailCLient email.Email) error {
-	return nil
+func (mock *MockDB) CreateEmailValidationToken(user *models.User) (string, error) {
+	return "", nil
 }
 
 func (mock *MockDB) VerifyEmail(token string) error {
@@ -104,8 +104,8 @@ func (mock *MockDB) GetNotificationTokens(user *models.User) ([]string, error) {
 	return []string{}, nil
 }
 
-func (mock *MockDB) CreateForgotPasswordToken(user *models.User, emailCLient email.Email) error {
-	return nil
+func (mock *MockDB) CreateForgotPasswordToken(user *models.User) (string, error) {
+	return "", nil
 }
 
 func (mock *MockDB) ResetPassword(token, password string) error {

@@ -43,8 +43,10 @@ func (server *server) resendVerifyEmail(c *gin.Context) {
 		return
 	}
 
-	err = server.db.CreateEmailValidationToken(user, server.email)
+	tx := server.db.Begin()
+	token, err := tx.CreateEmailValidationToken(user)
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "resendVerifyEmail",
 			"subFunc": "models.CreateEmailValidationToken",
@@ -54,6 +56,19 @@ func (server *server) resendVerifyEmail(c *gin.Context) {
 		return
 	}
 
+	err = server.email.SendValidationEmail(user.Name, user.Email, token)
+	if err != nil {
+		tx.Rollback()
+		log.WithFields(log.Fields{
+			"func":    "CreateEmailValidationToken",
+			"subFunc": "emailClient.SendValidationEmail",
+			"userID":  user.ID,
+		})
+		c.JSON(http.StatusInternalServerError, "Error sending email")
+		return
+	}
+
+	tx.Commit()
 	c.Status(http.StatusOK)
 	return
 }

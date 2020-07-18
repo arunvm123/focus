@@ -5,39 +5,23 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/arunvm/travail-backend/email"
 	"github.com/arunvm/travail-backend/models"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
 
-func (db *Mysql) CreateEmailValidationToken(user *models.User, emailClient email.Email) error {
+func (db *Mysql) CreateEmailValidationToken(user *models.User) (string, error) {
 
-	tx := db.Client.Begin()
-
-	token, err := emailValidateToken(tx, user)
+	token, err := emailValidateToken(db.Client, user)
 	if err != nil {
-		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "CreateEmailValidationToken",
 			"subFunc": "emailValidateToken",
 		}).Error(err)
-		return err
+		return "", err
 	}
 
-	err = emailClient.SendValidationEmail(user.Name, user.Email, token)
-	if err != nil {
-		tx.Rollback()
-		log.WithFields(log.Fields{
-			"func":    "CreateEmailValidationToken",
-			"subFunc": "emailClient.SendValidationEmail",
-			"userID":  user.ID,
-		})
-		return err
-	}
-
-	tx.Commit()
-	return nil
+	return token, err
 }
 
 func emailValidateToken(db *gorm.DB, user *models.User) (string, error) {
