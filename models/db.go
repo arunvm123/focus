@@ -39,7 +39,7 @@ type DB interface {
 	GetLists(args *GetListsArgs, user *User) (*[]ListInfo, error)
 	UpdateList(args *UpdateListArgs, user *User) error
 	// Organisation invitation functions
-	CreateOrganisationInviteToken(args *InviteToOrganisationArgs, admin *User, emailClient email.Email) error
+	CreateOrganisationInviteToken(args *InviteToOrganisationArgs, admin *User) (*OrganisationInvitationInfo, error)
 	AcceptOrganisationInvite(args *AcceptOrganisationInviteArgs, user *User) error
 	// Organisation member functions
 	GetOrganisationMembers(organisationID string) (*[]OrganisationMemberInfo, error)

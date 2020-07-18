@@ -14,3 +14,10 @@ type InviteToOrganisationArgs struct {
 type AcceptOrganisationInviteArgs struct {
 	Token string `json:"token" binding:"required"`
 }
+
+type OrganisationInvitationInfo struct {
+	OrganisationID   string `json:"organisationID"`
+	Email            string `json:"email"`
+	Token            string `json:"token"`
+	OrganisationName string `json:"organisationName"`
+}
