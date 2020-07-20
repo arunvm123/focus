@@ -36,12 +36,13 @@ func main() {
 	// Logging options
 	log.SetFormatter(&log.JSONFormatter{})
 
-	// Reading file path from flag
+	// Flags to read configuration
 	filePath := flag.String("config-path", "config.yaml", "filepath to configuration file")
+	env := flag.Bool("config-env", false, "If set to true, configuration is read from environment variables")
 	flag.Parse()
 
 	// Reading config variables
-	config, err := config.Initialise(*filePath)
+	config, err := config.Initialise(*filePath, *env)
 	if err != nil {
 		log.Fatalf("Failed to read config\n%v", err)
 	}
