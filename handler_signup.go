@@ -25,8 +25,10 @@ func (server *server) signup(c *gin.Context) {
 		return
 	}
 
-	_, err = server.db.UserSignup(&args, false, server.email)
+	tx := server.db.Begin()
+	user, token, err := tx.UserSignup(&args, false)
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "signup",
 			"subFunc": "models.UserSignup",
@@ -36,6 +38,19 @@ func (server *server) signup(c *gin.Context) {
 		return
 	}
 
+	err = server.email.SendValidationEmail(user.Name, user.Email, token)
+	if err != nil {
+		tx.Rollback()
+		log.WithFields(log.Fields{
+			"func":    "UserSignup",
+			"subFunc": "emailClient.SendValidationEmail",
+			"userID":  user.ID,
+		})
+		c.JSON(http.StatusInternalServerError, "Error while sending email")
+		return
+	}
+
+	tx.Commit()
 	c.Status(http.StatusOK)
 	return
 }

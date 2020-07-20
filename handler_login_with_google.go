@@ -64,10 +64,13 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 		return
 	}
 
+	tx := server.db.Begin()
+
 	var user *models.User
-	if server.db.CheckIfUserExists(userInfo.Email) == true {
-		user, err = server.db.GetUserFromEmail(userInfo.Email)
+	if tx.CheckIfUserExists(userInfo.Email) == true {
+		user, err = tx.GetUserFromEmail(userInfo.Email)
 		if err != nil {
+			tx.Rollback()
 			log.WithFields(log.Fields{
 				"func":    "loginWithGoogle",
 				"subFunc": "models.GetUserFromEmail",
@@ -78,15 +81,19 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 		}
 
 		if user.GoogleOauth == false {
+			tx.Rollback()
 			c.JSON(http.StatusUnauthorized, "Login with email and password")
 			return
 		}
 	} else {
-		user, err = server.db.UserSignup(&models.SignUpArgs{
+		var token string
+
+		user, token, err = tx.UserSignup(&models.SignUpArgs{
 			Email: userInfo.Email,
 			Name:  userInfo.Name,
-		}, true, server.email)
+		}, true)
 		if err != nil {
+			tx.Rollback()
 			log.WithFields(log.Fields{
 				"func":    "loginWithGoogle",
 				"subFunc": "models.SignUpWithGoogle",
@@ -95,10 +102,23 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, "Error when signing up with google")
 			return
 		}
+
+		err = server.email.SendValidationEmail(user.Name, user.Email, token)
+		if err != nil {
+			tx.Rollback()
+			log.WithFields(log.Fields{
+				"func":    "UserSignup",
+				"subFunc": "emailClient.SendValidationEmail",
+				"userID":  user.ID,
+			})
+			c.JSON(http.StatusInternalServerError, "Error while sending email")
+			return
+		}
 	}
 
 	signedToken, err := getJWTToken(user.ID)
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "loginWithGoogle",
 			"subFunc": "getJWTToken",
@@ -108,8 +128,9 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 		return
 	}
 
-	personalTeamID, err := server.db.GetPersonalTeamID(user)
+	personalTeamID, err := tx.GetPersonalTeamID(user)
 	if err != nil {
+		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":    "loginWithGoogle",
 			"subFunc": "user.GetPersonalTeamID",
@@ -120,6 +141,7 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 
 	}
 
+	tx.Commit()
 	c.SetCookie("Authorization", signedToken, 0, "", "travail.in", false, false)
 
 	c.JSON(http.StatusOK, struct {

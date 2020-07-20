@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/arunvm/travail-backend/email"
 	push "github.com/arunvm/travail-backend/push_notification"
 )
 
@@ -71,7 +70,7 @@ type DB interface {
 	GetUserFromEmail(email string) (*User, error)
 	GetUserFromID(userID int) (*User, error)
 	CheckIfUserExists(email string) bool
-	UserSignup(args *SignUpArgs, googleOauth bool, emailClient email.Email) (*User, error)
+	UserSignup(args *SignUpArgs, googleOauth bool) (*User, string, error)
 	UpdatePassword(args *UpdatePasswordArgs, user *User) error
 	// Transaction
 	Transaction

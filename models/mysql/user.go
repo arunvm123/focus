@@ -1,7 +1,6 @@
 package mysql
 
 import (
-	"github.com/arunvm/travail-backend/email"
 	"github.com/arunvm/travail-backend/models"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
@@ -91,10 +90,8 @@ func (db *Mysql) CheckIfUserExists(email string) bool {
 	return false
 }
 
-func (db *Mysql) UserSignup(args *models.SignUpArgs, googleOauth bool, emailClient email.Email) (*models.User, error) {
+func (db *Mysql) UserSignup(args *models.SignUpArgs, googleOauth bool) (*models.User, string, error) {
 	var user models.User
-
-	tx := db.Client.Begin()
 
 	if !googleOauth {
 		passwordHash, err := bcrypt.GenerateFromPassword([]byte(args.Password), bcrypt.DefaultCost)
@@ -104,7 +101,7 @@ func (db *Mysql) UserSignup(args *models.SignUpArgs, googleOauth bool, emailClie
 				"subFunc": "bcrypt.GenerateFromPassword",
 				"email":   args.Email,
 			}).Error(err)
-			return nil, err
+			return nil, "", err
 		}
 		user.Password = string(passwordHash)
 	}
@@ -114,69 +111,54 @@ func (db *Mysql) UserSignup(args *models.SignUpArgs, googleOauth bool, emailClie
 	user.Verified = false
 	user.GoogleOauth = googleOauth
 
-	err := tx.Create(&user).Error
+	err := db.Client.Create(&user).Error
 	if err != nil {
-		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":        "UserSignup",
 			"subFunc":     "user.Create",
 			"email":       args.Email,
 			"googleOauth": googleOauth,
 		}).Error(err)
-		return nil, err
+		return nil, "", err
 	}
 
-	org, err := createPersonalOrganisation(tx, &user)
+	org, err := createPersonalOrganisation(db.Client, &user)
 	if err != nil {
-		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":        "UserSignup",
 			"subFunc":     "user.createPersonalOrganisation",
 			"email":       args.Email,
 			"googleOauth": googleOauth,
 		}).Error(err)
-		return nil, err
+		return nil, "", err
 	}
 
-	err = createPersonalTeam(tx, org, &user)
+	err = createPersonalTeam(db.Client, org, &user)
 	if err != nil {
-		tx.Rollback()
 		log.WithFields(log.Fields{
 			"func":        "UserSignup",
 			"subFunc":     "user.createPersonalTeam",
 			"email":       args.Email,
 			"googleOauth": googleOauth,
 		}).Error(err)
-		return nil, err
+		return nil, "", err
 	}
 
+	var token string
 	if !googleOauth {
-		token, err := emailValidateToken(tx, &user)
+		token, err = emailValidateToken(db.Client, &user)
 		if err != nil {
-			tx.Rollback()
 			log.WithFields(log.Fields{
 				"func":        "UserSignup",
 				"subFunc":     "emailValidateToken",
 				"email":       args.Email,
 				"googleOauth": googleOauth,
 			}).Error(err)
-			return nil, err
-		}
-
-		err = emailClient.SendValidationEmail(user.Name, user.Email, token)
-		if err != nil {
-			tx.Rollback()
-			log.WithFields(log.Fields{
-				"func":    "UserSignup",
-				"subFunc": "emailClient.SendValidationEmail",
-				"userID":  user.ID,
-			})
-			return nil, err
+			return nil, "", err
 		}
 	}
 
-	tx.Commit()
-	return &user, nil
+	return &user, token, nil
 }
 
 func (db *Mysql) UpdatePassword(args *models.UpdatePasswordArgs, user *models.User) error {

@@ -1,7 +1,6 @@
 package mockdb
 
 import (
-	"github.com/arunvm/travail-backend/email"
 	"github.com/arunvm/travail-backend/models"
 	push "github.com/arunvm/travail-backend/push_notification"
 	"github.com/stretchr/testify/mock"
@@ -112,8 +111,8 @@ func (mock *MockDB) ResetPassword(token, password string) error {
 	return nil
 }
 
-func (mock *MockDB) CreateOrganisationInviteToken(args *models.InviteToOrganisationArgs, admin *models.User, emailClient email.Email) error {
-	return nil
+func (mock *MockDB) CreateOrganisationInviteToken(args *models.InviteToOrganisationArgs, admin *models.User) (*models.OrganisationInvitationInfo, error) {
+	return nil, nil
 }
 
 func (mock *MockDB) AcceptOrganisationInvite(args *models.AcceptOrganisationInviteArgs, user *models.User) error {
@@ -216,8 +215,8 @@ func (mock *MockDB) CheckIfUserExists(email string) bool {
 	return false
 }
 
-func (mock *MockDB) UserSignup(args *models.SignUpArgs, googleOauth bool, emailClient email.Email) (*models.User, error) {
-	return nil, nil
+func (mock *MockDB) UserSignup(args *models.SignUpArgs, googleOauth bool) (*models.User, string, error) {
+	return nil, "", nil
 }
 
 func (mock *MockDB) UpdatePassword(args *models.UpdatePasswordArgs, user *models.User) error {
