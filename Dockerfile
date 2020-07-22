@@ -1,4 +1,11 @@
-FROM golang:1.12.7 as build-env
+FROM golang:alpine AS build-env
+
+# Set necessary environmet variables needed for our image
+ENV GO111MODULE=on \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+
 # All these steps will be cached
 RUN mkdir /travail-backend
 WORKDIR /travail-backend
@@ -12,10 +19,12 @@ RUN go mod download
 COPY . .
 
 # Build the binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/bin/travail-backend
+RUN go build -o server .
 # <- Second step to build minimal image
 FROM scratch
-COPY --from=build-env /travail-backend/config.yaml .
-COPY --from=build-env /go/bin/travail-backend .
+COPY --from=build-env /travail-backend/certs /certs
+COPY --from=build-env /travail-backend/push_notification/fcm/travail-7f7b9-firebase-adminsdk-v5arf-c7dd3d30d3.json /
+COPY --from=build-env /travail-backend/server /
+# COPY --from=build-env /travail-backend/config.yaml /
 EXPOSE 5000
-ENTRYPOINT ["./travail-backend"]
+ENTRYPOINT ["./server","-config-env","true"]
