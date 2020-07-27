@@ -7,12 +7,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	emailValidation    string = "d-71b7ba0ed167416d8b07178b45cd2297"
-	forgotPassword     string = "d-1ed04ad46478427d9970ba1b5a5a3033"
-	organisationInvite string = "d-fafbec3bf89944f5ba7f991ca19d81ab"
-)
-
 type Sendgrid struct {
 	Client *sendgrid.Client
 }
@@ -44,7 +38,7 @@ func (sendgrid *Sendgrid) SendValidationEmail(name, email string, token string) 
 	return sendEmail(sendgrid.Client, to, map[string]interface{}{
 		"name":            name,
 		"validation_link": c.DomainURL + "verify/module?token=" + token,
-	}, emailValidation)
+	}, c.EmailTemplate.EmailValidation)
 }
 
 func (sendgrid *Sendgrid) SendForgotPasswordEmail(name, email string, token string) error {
@@ -66,7 +60,7 @@ func (sendgrid *Sendgrid) SendForgotPasswordEmail(name, email string, token stri
 	return sendEmail(sendgrid.Client, to, map[string]interface{}{
 		"name": name,
 		"link": c.DomainURL + "forgot/module?token=" + token,
-	}, forgotPassword)
+	}, c.EmailTemplate.ForgotPassword)
 }
 
 func (sendgrid *Sendgrid) SendOrganisationInvite(adminName, inviteEmail, token, orgName string) error {
@@ -88,7 +82,7 @@ func (sendgrid *Sendgrid) SendOrganisationInvite(adminName, inviteEmail, token, 
 		"admin_name":        adminName,
 		"organisation_name": orgName,
 		"invite_link":       c.DomainURL + "organisation/invite/accept?token=" + token,
-	}, organisationInvite)
+	}, c.EmailTemplate.OrganisationInvite)
 }
 
 func sendEmail(emailCLient *sendgrid.Client, to []*mail.Email, templateData map[string]interface{}, templateID string) error {

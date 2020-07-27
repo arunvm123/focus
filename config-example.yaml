@@ -8,5 +8,9 @@ database:
   port: "<PORT>"
 jwt_secret: "<JWT_SECRET>"
 sendgrid_key: "<SENDGRID_KEY>"
+email_template:
+  email_validation: "<TEMPLATE_ID>"
+  forgot_password: "<TEMPLATE_ID>"
+  organisation_invite: "<TEMPLATE_ID>"
 fcm_service_acccount_key_path: "<SERVICE_ACCOUNT_KEY>"
 admin_ids: ["ID-1,"ID-2"]

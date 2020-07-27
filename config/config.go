@@ -16,6 +16,7 @@ type config struct {
 	Database                 databaseConfig `yaml:"database" env:"DATABASE"`
 	JWTSecret                string         `yaml:"jwt_secret" env:"JWT_SECRET"`
 	SendgridKey              string         `yaml:"sendgrid_key" env:"SENDGRID_KEY"`
+	EmailTemplate            emailTemplate  `yaml:"email_template" env:"EMAIL_TEMPLATE"`
 	FCMServiceAccountKeyPath string         `yaml:"fcm_service_account_key_path" env:"FCM_SERVICE_ACCOUNT_KEY_PATH"`
 	AdminIDs                 adminIDs       `yaml:"admin_ids" env:"ADMIN_IDS"`
 }
@@ -26,6 +27,13 @@ type databaseConfig struct {
 	DatabaseName string `yaml:"database_name" env:"DB_NAME"`
 	Host         string `yaml:"host" env:"DB_HOST"`
 	Port         string `json:"port" env:"DB_PORT"`
+}
+
+// Specifies ID for each template
+type emailTemplate struct {
+	EmailValidation    string `yaml:"email_validation" env:"EMAIL_VALIDATION"`
+	ForgotPassword     string `yaml:"forgot_password" env:"FORGOT_PASSWORD"`
+	OrganisationInvite string `yaml:"organisation_invite" env:"ORGANISATION_INVITE"`
 }
 
 type adminIDs []int
