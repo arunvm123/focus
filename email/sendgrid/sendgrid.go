@@ -1,7 +1,7 @@
 package sendgrid
 
 import (
-	"github.com/arunvm/travail-backend/config"
+	"github.com/arunvm/focus/config"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	log "github.com/sirupsen/logrus"
@@ -95,8 +95,8 @@ func sendEmail(emailCLient *sendgrid.Client, to []*mail.Email, templateData map[
 	email := mail.NewV3Mail()
 
 	email.SetFrom(&mail.Email{
-		Address: "info@travail.com",
-		Name:    "Travail",
+		Address: "info@focus.com",
+		Name:    "Focus",
 	})
 	email.SetTemplateID(templateID)
 	email.AddPersonalizations(personalizations...)

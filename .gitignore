@@ -3,6 +3,6 @@ config-prod.yaml
 config.yaml
 config-remote.yaml
 certs/*
-push_notification/fcm/travail-7f7b9-firebase-adminsdk-v5arf-c7dd3d30d3.json
+push_notification/fcm/focus-7f7b9-firebase-adminsdk-v5arf-c7dd3d30d3.json
 configenv
 k8s/secrets.yaml

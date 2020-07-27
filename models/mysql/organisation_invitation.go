@@ -1,7 +1,7 @@
 package mysql
 
 import (
-	"github.com/arunvm/travail-backend/models"
+	"github.com/arunvm/focus/models"
 	"github.com/rs/xid"
 	log "github.com/sirupsen/logrus"
 )

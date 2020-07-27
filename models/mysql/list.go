@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/arunvm/travail-backend/models"
+	"github.com/arunvm/focus/models"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )

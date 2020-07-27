@@ -1,4 +1,4 @@
-# travail-backend
+# focus
 
 
   Create **config.yaml** with help of the given example,then to run
@@ -9,9 +9,9 @@
 ## Docker
 
 ```
-  docker build -t travail-backend .
+  docker build -t focus .
 ```
 
 ```
-  docker run -it -p 5000:5000 travail-backend
+  docker run -it -p 5000:5000 focus
 ```

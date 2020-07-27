@@ -6,7 +6,7 @@ import (
 
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/messaging"
-	push "github.com/arunvm/travail-backend/push_notification"
+	push "github.com/arunvm/focus/push_notification"
 	"google.golang.org/api/option"
 )
 

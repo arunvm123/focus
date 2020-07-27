@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/arunvm/travail-backend/models"
+	"github.com/arunvm/focus/models"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
@@ -142,7 +142,7 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 	}
 
 	tx.Commit()
-	c.SetCookie("Authorization", signedToken, 0, "", "travail.in", false, false)
+	// c.SetCookie("Authorization", signedToken, 0, "", "focus.in", false, false)
 
 	c.JSON(http.StatusOK, struct {
 		Token          string  `json:"token"`

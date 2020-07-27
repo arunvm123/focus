@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/arunvm/travail-backend/models"
+	"github.com/arunvm/focus/models"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )

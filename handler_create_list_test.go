@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/arunvm/travail-backend/models"
-	"github.com/arunvm/travail-backend/models/mockdb"
+	"github.com/arunvm/focus/models"
+	"github.com/arunvm/focus/models/mockdb"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/go-playground/assert.v1"
 )

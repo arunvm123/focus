@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
-	"github.com/arunvm/travail-backend/config"
-	"github.com/arunvm/travail-backend/models"
+	"github.com/arunvm/focus/config"
+	"github.com/arunvm/focus/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"

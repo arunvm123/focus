@@ -1,7 +1,7 @@
 package main
 
 import (
-	push "github.com/arunvm/travail-backend/push_notification"
+	push "github.com/arunvm/focus/push_notification"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/robfig/cron/v3"

@@ -1,6 +1,6 @@
 package mysql
 
-import "github.com/arunvm/travail-backend/models"
+import "github.com/arunvm/focus/models"
 
 func (db *Mysql) Begin() models.Transaction {
 	return &Mysql{

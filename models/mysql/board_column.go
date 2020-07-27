@@ -3,7 +3,7 @@ package mysql
 import (
 	"errors"
 
-	"github.com/arunvm/travail-backend/models"
+	"github.com/arunvm/focus/models"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )

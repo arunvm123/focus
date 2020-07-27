@@ -6,13 +6,13 @@ import (
 
 	"github.com/rs/cors"
 
-	"github.com/arunvm/travail-backend/config"
-	"github.com/arunvm/travail-backend/email"
-	"github.com/arunvm/travail-backend/email/sendgrid"
-	"github.com/arunvm/travail-backend/models"
-	"github.com/arunvm/travail-backend/models/mysql"
-	push "github.com/arunvm/travail-backend/push_notification"
-	"github.com/arunvm/travail-backend/push_notification/fcm"
+	"github.com/arunvm/focus/config"
+	"github.com/arunvm/focus/email"
+	"github.com/arunvm/focus/email/sendgrid"
+	"github.com/arunvm/focus/models"
+	"github.com/arunvm/focus/models/mysql"
+	push "github.com/arunvm/focus/push_notification"
+	"github.com/arunvm/focus/push_notification/fcm"
 
 	_ "github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"

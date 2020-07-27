@@ -7,8 +7,8 @@ ENV GO111MODULE=on \
     GOARCH=amd64
 
 # All these steps will be cached
-RUN mkdir /travail-backend
-WORKDIR /travail-backend
+RUN mkdir /focus
+WORKDIR /focus
 # <- COPY go.mod and go.sum files to the workspace
 COPY go.mod .
 COPY go.sum .
@@ -22,9 +22,9 @@ COPY . .
 RUN go build -o server .
 # <- Second step to build minimal image
 FROM scratch
-COPY --from=build-env /travail-backend/certs /certs
-COPY --from=build-env /travail-backend/push_notification/fcm/travail-7f7b9-firebase-adminsdk-v5arf-c7dd3d30d3.json /
-COPY --from=build-env /travail-backend/server /
-# COPY --from=build-env /travail-backend/config.yaml /
+COPY --from=build-env /focus/certs /certs
+COPY --from=build-env /focus/push_notification/fcm/focus-7f7b9-firebase-adminsdk-v5arf-c7dd3d30d3.json /
+COPY --from=build-env /focus/server /
+# COPY --from=build-env /focus/config.yaml /
 EXPOSE 5000
 ENTRYPOINT ["./server","-config-env","true"]

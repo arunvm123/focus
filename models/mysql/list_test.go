@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/arunvm/travail-backend/models"
+	"github.com/arunvm/focus/models"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"gopkg.in/go-playground/assert.v1"

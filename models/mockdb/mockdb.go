@@ -1,7 +1,7 @@
 package mockdb
 
 import (
-	"github.com/arunvm/travail-backend/models"
+	"github.com/arunvm/focus/models"
 	"github.com/stretchr/testify/mock"
 )
 

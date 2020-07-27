@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/arunvm/travail-backend/config"
-	"github.com/arunvm/travail-backend/models"
+	"github.com/arunvm/focus/config"
+	"github.com/arunvm/focus/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -79,7 +79,7 @@ func (server *server) login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("Authorization", signedToken, 0, "", "travail.in", false, false)
+	// c.SetCookie("Authorization", signedToken, 0, "", "focus.in", false, false)
 
 	c.JSON(http.StatusOK, struct {
 		Token          string  `json:"token"`
