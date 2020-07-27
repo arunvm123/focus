@@ -24,16 +24,16 @@ func (db *Mysql) AddNotificationToken(args *models.AddNotificationTokenArgs, use
 	return nil
 }
 
-func (db *Mysql) GetNotificationTokens(user *models.User) ([]string, error) {
+func (db *Mysql) GetNotificationTokens(userId int) ([]string, error) {
 	var tokens []string
 
-	err := db.Client.Table("fcm_notification_tokens").Where("user_id = ?", user.ID).
+	err := db.Client.Table("fcm_notification_tokens").Where("user_id = ?", userId).
 		Pluck("token", &tokens).Error
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":   "GetNotificationTokens",
 			"info":   "retrieving notification tokens",
-			"userID": user.ID,
+			"userID": userId,
 		}).Error(err)
 		return []string{}, err
 	}

@@ -1,9 +1,5 @@
 package models
 
-import (
-	push "github.com/arunvm/travail-backend/push_notification"
-)
-
 type DB interface {
 	// Board Column functions
 	CreateBoardColumn(args *CreateBoardColumnArgs) error
@@ -29,7 +25,7 @@ type DB interface {
 	InvalidateEmailTokens(userID int) error
 	// FCM notification token functions
 	AddNotificationToken(args *AddNotificationTokenArgs, user *User) error
-	GetNotificationTokens(user *User) ([]string, error)
+	GetNotificationTokens(userId int) ([]string, error)
 	// Forgot password token functions
 	CreateForgotPasswordToken(user *User) (string, error)
 	ResetPassword(token, password string) error
@@ -63,7 +59,7 @@ type DB interface {
 	UpdateTeam(args *UpdateTeamArgs, teamAdmin *User) error
 	GetPersonalTeamID(user *User) (string, error)
 	CheckIfTeamAdmin(teamID string, user *User) bool
-	SendPushNotificationForTasksAboutToExpire(pushClient push.Notification) error
+	GetTasksAboutToExpire() (*[]TaskInfo, error)
 	// User functions
 	GetProfile(user *User) (*UserProfile, error)
 	UpdateProfile(args UpdateProfileArgs, user *User) error

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/arunvm/travail-backend/models"
-	push "github.com/arunvm/travail-backend/push_notification"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
@@ -194,7 +193,7 @@ func (db *Mysql) getTaskOfUser(userID int, taskID string) (*models.Task, error) 
 	return &task, nil
 }
 
-func (db *Mysql) SendPushNotificationForTasksAboutToExpire(pushClient push.Notification) error {
+func (db *Mysql) GetTasksAboutToExpire() (*[]models.TaskInfo, error) {
 	startTime := time.Now().Unix()
 	endTime := startTime + (5 * 60)
 
@@ -208,48 +207,8 @@ func (db *Mysql) SendPushNotificationForTasksAboutToExpire(pushClient push.Notif
 			"func": "SendPushNotificationForTasksAboutToExpire",
 			"info": "retrieving tasks expiring within the next 5 mins",
 		}).Error(err)
-		return err
+		return nil, err
 	}
 
-	if len(tasks) == 0 {
-		return nil
-	}
-
-	for i := 0; i < len(tasks); i++ {
-		go func(i int) {
-			var deviceTokens []string
-			err = db.Client.Table("fcm_notification_tokens").Where("user_id = ?", tasks[i].UserID).
-				Pluck("token", &deviceTokens).Error
-			if err != nil {
-				log.WithFields(log.Fields{
-					"func": "SendPushNotificationForTasksAboutToExpire",
-					"info": "retrieving users device tokens",
-				}).Error(err)
-				return
-			}
-
-			if len(deviceTokens) == 0 {
-				return
-			}
-
-			err = pushClient.SendPushNotification(deviceTokens, &push.Payload{
-				Body:  "'" + tasks[i].Info + "' is due soon",
-				Title: tasks[i].Heading,
-				Data: map[string]string{
-					"link": "/todo/id?=" + tasks[i].ListID,
-				},
-				ClickAction: "/todo/id?=" + tasks[i].ListID,
-			})
-			if err != nil {
-				log.WithFields(log.Fields{
-					"func":    "SendPushNotificationForTasksAboutToExpire",
-					"subFunc": "push.SendPushNotification",
-				}).Error(err)
-				return
-			}
-
-		}(i)
-	}
-
-	return nil
+	return &tasks, nil
 }

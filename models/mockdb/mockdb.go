@@ -2,7 +2,6 @@ package mockdb
 
 import (
 	"github.com/arunvm/travail-backend/models"
-	push "github.com/arunvm/travail-backend/push_notification"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -99,7 +98,7 @@ func (mock *MockDB) AddNotificationToken(args *models.AddNotificationTokenArgs, 
 	return nil
 }
 
-func (mock *MockDB) GetNotificationTokens(user *models.User) ([]string, error) {
+func (mock *MockDB) GetNotificationTokens(userID int) ([]string, error) {
 	return []string{}, nil
 }
 
@@ -191,8 +190,8 @@ func (mock *MockDB) CheckIfTeamAdmin(teamID string, user *models.User) bool {
 	return false
 }
 
-func (mock *MockDB) SendPushNotificationForTasksAboutToExpire(pushClient push.Notification) error {
-	return nil
+func (mock *MockDB) GetTasksAboutToExpire() (*[]models.TaskInfo, error) {
+	return nil, nil
 }
 
 func (mock *MockDB) GetProfile(user *models.User) (*models.UserProfile, error) {

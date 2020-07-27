@@ -18,7 +18,7 @@ func (server *server) getNotificationTokens(c *gin.Context) {
 		return
 	}
 
-	tokens, err := server.db.GetNotificationTokens(user)
+	tokens, err := server.db.GetNotificationTokens(user.ID)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"func":    "getNotificationTokens",
