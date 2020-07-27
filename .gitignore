@@ -5,3 +5,4 @@ config-remote.yaml
 certs/*
 push_notification/travail-7f7b9-firebase-adminsdk-v5arf-c7dd3d30d3.json
 configenv
+k8s/secrets.yaml

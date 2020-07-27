@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment                 # Type of Kubernetes resource
+metadata:
+  name: travail           # Name of the Kubernetes resource
+spec:
+  replicas: 3                    # Number of pods to run at any given time
+  selector:
+    matchLabels:
+      app: travail-backend        # This deployment applies to any Pods matching the specified label
+  template:                      # This deployment will create a set of pods using the configurations in this template
+    metadata:
+      labels:                    # The labels that will be applied to all of the pods in this deployment
+        app: travail-backend
+    spec:                        # Spec for the container which will run in the Pod
+      containers:
+      - name: travail-backend
+        image: arunvm/travail-backend:latest
+        imagePullPolicy: Always
+        envFrom:
+        - secretRef:
+            name: envsecret
+        ports:
+          - containerPort: 5000  # Should match the port number that the Go application listens on
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: mysqldb
+spec:
+  type: ExternalName
+  externalName: db4free.net
+---
+apiVersion: v1
+kind: Service                    # Type of kubernetes resource
+metadata:
+  name: travail-backend-service   # Name of the resource
+spec:
+  type: NodePort                 # A port is opened on each node in your cluster via Kube proxy.
+  ports:                         # Take incoming HTTP requests on port 9090 and forward them to the targetPort of 8080
+  - name: http
+    port: 5000
+    targetPort: 5000
+  selector:
+    app: travail-backend         # Map any pod with label `app=go-hello-world` to this service
