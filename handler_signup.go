@@ -25,7 +25,7 @@ func (server *server) signup(c *gin.Context) {
 		return
 	}
 
-	tx := server.db.Begin()
+	tx := server.tx.Begin()
 	user, token, err := tx.UserSignup(&args, false)
 	if err != nil {
 		tx.Rollback()

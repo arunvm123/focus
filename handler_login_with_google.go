@@ -64,7 +64,7 @@ func (server *server) loginWithGoogle(c *gin.Context) {
 		return
 	}
 
-	tx := server.db.Begin()
+	tx := server.tx.Begin()
 
 	var user *models.User
 	if tx.CheckIfUserExists(userInfo.Email) == true {

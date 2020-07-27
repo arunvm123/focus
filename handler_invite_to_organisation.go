@@ -38,7 +38,7 @@ func (server *server) inviteToOrganisation(c *gin.Context) {
 
 	args.OrganisationID = c.Keys["organisationID"].(string)
 
-	tx := server.db.Begin()
+	tx := server.tx.Begin()
 	orgInfo, err := tx.CreateOrganisationInviteToken(&args, admin)
 	if err != nil {
 		tx.Rollback()

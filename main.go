@@ -20,6 +20,7 @@ import (
 
 type server struct {
 	db     models.DB
+	tx     models.Transaction
 	routes http.Handler
 	email  email.Email
 	push   push.Notification
@@ -54,6 +55,7 @@ func main() {
 	}
 
 	server.db = db
+	server.tx = db
 	mysql.MigrateDB(db.Client)
 
 	// email client

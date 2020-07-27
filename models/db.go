@@ -72,6 +72,4 @@ type DB interface {
 	CheckIfUserExists(email string) bool
 	UserSignup(args *SignUpArgs, googleOauth bool) (*User, string, error)
 	UpdatePassword(args *UpdatePasswordArgs, user *User) error
-	// Transaction
-	Transaction
 }

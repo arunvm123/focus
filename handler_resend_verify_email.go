@@ -43,7 +43,7 @@ func (server *server) resendVerifyEmail(c *gin.Context) {
 		return
 	}
 
-	tx := server.db.Begin()
+	tx := server.tx.Begin()
 	token, err := tx.CreateEmailValidationToken(user)
 	if err != nil {
 		tx.Rollback()
